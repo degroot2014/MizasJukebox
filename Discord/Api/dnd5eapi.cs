@@ -1,13 +1,12 @@
 ﻿using RestSharp;
+
 namespace JukeboxDiscordClient.Api
 {
-    
-
-    public class Open5eApi
+    public class dnd5eapi
     {
-        private const string _url = "https://api.open5e.com/";
+        private const string _url = "https://www.dnd5eapi.co/api/";
 
-        public Open5eApi()
+        public dnd5eapi()
         {
 
         }
@@ -20,6 +19,16 @@ namespace JukeboxDiscordClient.Api
         public Result GetCondition(string name)
         {
             return CallApiResult($"conditions/{name}");
+        }
+
+        public IList<Result> GetSpellList(string className)
+        {
+            return CallApi($"classes/{className}/spells").results;
+        }
+
+        public Result GetSpell(string name)
+        {
+            return CallApiResult($"spells/{name}");
         }
 
         private Root CallApi(string command)

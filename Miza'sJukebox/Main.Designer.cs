@@ -53,11 +53,17 @@
             this.folderSelectToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.musicFolderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.musicErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+            this.discordCommandSettingsLabel = new System.Windows.Forms.Label();
+            this.commandPanel = new System.Windows.Forms.Panel();
+            this.mapCommand = new System.Windows.Forms.Label();
+            this.mapCommandLabel = new System.Windows.Forms.LinkLabel();
+            this.mapOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.serverPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.voiceChannelErrorProvider)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.serverErrorProvider)).BeginInit();
             this.musicPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.musicErrorProvider)).BeginInit();
+            this.commandPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // serverPanel
@@ -275,12 +281,60 @@
             // 
             this.musicErrorProvider.ContainerControl = this;
             // 
+            // discordCommandSettingsLabel
+            // 
+            this.discordCommandSettingsLabel.AutoSize = true;
+            this.discordCommandSettingsLabel.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.discordCommandSettingsLabel.Location = new System.Drawing.Point(3, 2);
+            this.discordCommandSettingsLabel.Name = "discordCommandSettingsLabel";
+            this.discordCommandSettingsLabel.Size = new System.Drawing.Size(240, 25);
+            this.discordCommandSettingsLabel.TabIndex = 7;
+            this.discordCommandSettingsLabel.Text = "Discord Command Settings";
+            // 
+            // commandPanel
+            // 
+            this.commandPanel.Controls.Add(this.mapCommand);
+            this.commandPanel.Controls.Add(this.mapCommandLabel);
+            this.commandPanel.Controls.Add(this.discordCommandSettingsLabel);
+            this.commandPanel.Location = new System.Drawing.Point(520, 113);
+            this.commandPanel.Name = "commandPanel";
+            this.commandPanel.Size = new System.Drawing.Size(268, 170);
+            this.commandPanel.TabIndex = 8;
+            // 
+            // mapCommand
+            // 
+            this.mapCommand.AutoSize = true;
+            this.mapCommand.Location = new System.Drawing.Point(50, 27);
+            this.mapCommand.Name = "mapCommand";
+            this.mapCommand.Size = new System.Drawing.Size(21, 15);
+            this.mapCommand.TabIndex = 9;
+            this.mapCommand.Text = "c:\\";
+            // 
+            // mapCommandLabel
+            // 
+            this.mapCommandLabel.AutoSize = true;
+            this.mapCommandLabel.LinkColor = System.Drawing.Color.White;
+            this.mapCommandLabel.Location = new System.Drawing.Point(10, 27);
+            this.mapCommandLabel.Name = "mapCommandLabel";
+            this.mapCommandLabel.Size = new System.Drawing.Size(34, 15);
+            this.mapCommandLabel.TabIndex = 8;
+            this.mapCommandLabel.TabStop = true;
+            this.mapCommandLabel.Text = "!map";
+            this.mapCommandLabel.VisitedLinkColor = System.Drawing.Color.White;
+            this.mapCommandLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.mapCommandLabel_LinkClicked);
+            // 
+            // mapOpenFileDialog
+            // 
+            this.mapOpenFileDialog.FileName = "mapOpenFileDialog";
+            this.mapOpenFileDialog.Title = "Picture of Map";
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlDarkDark;
             this.ClientSize = new System.Drawing.Size(794, 548);
+            this.Controls.Add(this.commandPanel);
             this.Controls.Add(this.musicPanel);
             this.Controls.Add(this.serverPanel);
             this.ForeColor = System.Drawing.SystemColors.ControlLightLight;
@@ -293,6 +347,8 @@
             this.musicPanel.ResumeLayout(false);
             this.musicPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.musicErrorProvider)).EndInit();
+            this.commandPanel.ResumeLayout(false);
+            this.commandPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -322,5 +378,10 @@
         private ErrorProvider musicErrorProvider;
         private Label currentlyPlayingLabel;
         private Label currentlyPlaying;
+        private Panel commandPanel;
+        private Label mapCommand;
+        private LinkLabel mapCommandLabel;
+        private Label discordCommandSettingsLabel;
+        private OpenFileDialog mapOpenFileDialog;
     }
 }

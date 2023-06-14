@@ -19,6 +19,7 @@ namespace JukeboxDiscordClient.SlashCommands
             switch (command.Data.Name)
             {
                 case "roll":
+                case "dm-roll":
                     await DiceCommands.Roll(command);
                     break;
                 case "roll-percentile":
@@ -41,8 +42,9 @@ namespace JukeboxDiscordClient.SlashCommands
 
         public async Task CreateSlashCommands()
         {
-            
+
             await CreateRoll();
+            await CreateDmRoll();
             await CreatePercentileRoll();
             await CreateRollHealth();
             await CreateConditions();
@@ -70,6 +72,40 @@ namespace JukeboxDiscordClient.SlashCommands
                     .WithType(ApplicationCommandOptionType.Integer))
                 .AddOption("number", ApplicationCommandOptionType.Integer, "Number of dice to roll")
                 .AddOption("modifier", ApplicationCommandOptionType.Integer, "Modifier to add to rolls");
+            await _client.CreateGlobalApplicationCommandAsync(global.Build());
+        }
+
+        private async Task CreateDmRoll()
+        {
+            var global = new SlashCommandBuilder()
+                .WithName("dm-roll")
+                .WithDescription("Roll dice")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("dice")
+                    .WithDescription("Dice wanting to be rolled")
+                    .WithRequired(true)
+                    .AddChoice("d4", 4)
+                    .AddChoice("d6", 6)
+                    .AddChoice("d8", 8)
+                    .AddChoice("d10", 10)
+                    .AddChoice("d12", 12)
+                    .AddChoice("d20", 20)
+                    .WithType(ApplicationCommandOptionType.Integer))
+                .AddOption("number", ApplicationCommandOptionType.Integer, "Number of dice to roll")
+                .AddOption("modifier", ApplicationCommandOptionType.Integer, "Modifier to add to rolls")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("rig")
+                    .WithDescription("Weighted Rolls")
+                    .WithRequired(false)
+                    .AddChoice("High", 1)
+                    .AddChoice("Low", 2)
+                    .WithType(ApplicationCommandOptionType.Integer))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("hide")
+                    .WithDescription("Hides results")
+                    .WithRequired(false)
+                    .AddChoice("Yes", 1)
+                    .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
 

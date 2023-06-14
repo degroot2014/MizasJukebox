@@ -4,8 +4,10 @@ using Discord.WebSocket;
 using Discord.Audio;
 using Discord.Commands;
 using JukeboxDiscordClient.SlashCommands;
+using JukeboxDiscordClient.Modules;
+using JukeboxDiscordClient.Domain;
 
-namespace JukeBoxDiscordClient
+namespace JukeboxDiscordClient
 {
     public class DiscordClient
     {
@@ -21,6 +23,7 @@ namespace JukeBoxDiscordClient
         private Stream _output;
         private CommandService _commands;
         private SlashCommandMaster _slashCommands;
+        private DiscordSettings _settings;
 
         private static bool _paused = false;
         private static bool _playing = false;
@@ -37,11 +40,16 @@ namespace JukeBoxDiscordClient
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
-            while (_client.ConnectionState != ConnectionState.Connected);
-            while (_client.Guilds.First() == null || _client.Guilds.First().Name == null);
+            while (_client.ConnectionState != ConnectionState.Connected) ;
+            while (_client.Guilds.First() == null || _client.Guilds.First().Name == null) ;
 
             _slashCommands = new SlashCommandMaster(_client);
             await InstallCommandsAsync();
+        }
+
+        public async Task SetLinkCommands(string mapFile)
+        {
+            _settings.MapCommand = mapFile;
         }
 
         public IReadOnlyCollection<SocketGuild> GetServers()
@@ -105,10 +113,10 @@ namespace JukeBoxDiscordClient
             _output = _ffmpeg.StandardOutput.BaseStream;
             await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);
 
-            while(true)
+            while (true)
             {
                 //Music finished or broken
-                if(_ffmpeg.HasExited || discord == null)
+                if (_ffmpeg.HasExited || discord == null)
                 {
                     CloseFileStreams();
                     break;
@@ -129,7 +137,7 @@ namespace JukeBoxDiscordClient
                 {
                     await discord.WriteAsync(buffer, 0, byteCount);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     await discord?.FlushAsync();
                     throw;
@@ -162,9 +170,9 @@ namespace JukeBoxDiscordClient
 
         private void CloseFileStreams()
         {
-            if(_ffmpeg != null) 
+            if (_ffmpeg != null)
                 _ffmpeg.Close();
-            if(_output != null)
+            if (_output != null)
                 _output.Close();
         }
         #endregion
@@ -179,6 +187,9 @@ namespace JukeBoxDiscordClient
 
             _client.MessageReceived += HandleCommandAsync;
             _client.SlashCommandExecuted += _slashCommands.SlashCommandAsync;
+
+            //Modules
+            await _commands.AddModuleAsync<LinkModule>(null);
 
             //Slash Commands
             await _slashCommands.CreateSlashCommands();
@@ -214,6 +225,6 @@ namespace JukeBoxDiscordClient
 /*
     Code to remove Commands
         var test = await _client.GetGlobalApplicationCommandsAsync();
-        var command = test.First();
+        var command = test.First(t => t.Name == "rigged-roll");
         await command.DeleteAsync();
 */

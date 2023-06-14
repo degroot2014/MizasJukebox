@@ -23,7 +23,7 @@ namespace JukeboxDiscordClient.SlashCommands
             var condition = _api.GetCondition(name);
 
             var message = $"{condition.name}";
-            foreach(var line in condition.desc)
+            foreach (var line in condition.desc)
             {
                 message += $"\n{line}";
             }
@@ -36,11 +36,11 @@ namespace JukeboxDiscordClient.SlashCommands
             var spellList = _api.GetSpellList(className);
 
             var message = $"Spell List for {className}";
-            foreach(var spell in spellList)
+            foreach (var spell in spellList)
             {
                 message += $"\n{spell.name}";
             }
-            await command.RespondAsync(message, ephemeral:true);
+            await command.RespondAsync(message, ephemeral: true);
         }
 
         public async Task GetSpell(SocketSlashCommand command)
@@ -48,36 +48,36 @@ namespace JukeboxDiscordClient.SlashCommands
             var spellName = (string)command.Data.Options.First(o => o.Name == "spell").Value;
             var spell = _api.GetSpell(spellName.ToLower().Replace(' ', '-'));
 
-            if(spell == null)
+            if (spell == null)
             {
                 await command.RespondAsync($"No spell found with name {spellName}");
             }
 
             var message = spell.name;
-            foreach(var line in spell.desc)
+            foreach (var line in spell.desc)
             {
                 message += $"\n{line}";
             }
-            if(!string.IsNullOrEmpty(spell.range))
+            if (!string.IsNullOrEmpty(spell.range))
             {
                 message += $"\nRange: {spell.range}";
             }
-            if(spell.components.Any())
+            if (spell.components.Any())
             {
                 message += $"\nComponents: {(string.Join(", ", spell.components))}";
             }
-            if(!string.IsNullOrEmpty(spell.material))
+            if (!string.IsNullOrEmpty(spell.material))
             {
                 message += $"\nMaterials: {spell.material}";
             }
-            if(spell.area_of_effect != null)
+            if (spell.area_of_effect != null)
             {
                 message += $"\nArea of Effect:" +
                            $"\n      Size: {spell.area_of_effect.size}ft" +
                            $"\n      Type: {spell.area_of_effect.type}";
             }
             message += $"\nRitual: {(spell.ritual ? "Yes" : "No")}";
-            if(!string.IsNullOrEmpty(spell.duration))
+            if (!string.IsNullOrEmpty(spell.duration))
             {
                 message += $"\nDuration: {spell.duration}";
             }
@@ -87,7 +87,7 @@ namespace JukeboxDiscordClient.SlashCommands
                 message += $"\nCasting Time: {spell.casting_time}";
             }
             message += $"\nLevel: {spell.level}";
-            if(spell.damage != null)
+            if (spell.damage != null)
             {
                 //spell.damage.damage_type
                 message += $"\nDamage Type: {spell.damage.damage_type.name}";
@@ -102,7 +102,7 @@ namespace JukeboxDiscordClient.SlashCommands
                     message += spell.damage.damage_at_slot_level.PrintChart();
                 }
             }
-            if(spell.school != null)
+            if (spell.school != null)
             {
                 message += $"\nSchool: {spell.school.name}";
             }

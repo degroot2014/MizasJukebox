@@ -1,4 +1,4 @@
-using JukeBoxDiscordClient;
+using JukeboxDiscordClient;
 using Miza_sJukebox.Helpers;
 
 namespace Miza_sJukebox
@@ -32,6 +32,7 @@ namespace Miza_sJukebox
         {
             _settings.LoadSettings();
             currentMusicFolder.Text = _settings.MusicFolderPath;
+            mapCommand.Text = _settings.MapCommand;
         }
 
         private void GetMusicTracks()
@@ -159,6 +160,17 @@ namespace Miza_sJukebox
                 _isPaused = !_isPaused;
             }
             _discordClient.StopSong();
+        }
+
+        private void mapCommandLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var result = mapOpenFileDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                _settings.MapCommand = mapCommand.Text = mapOpenFileDialog.FileName;
+                _settings.SaveSettings();
+            }
         }
     }
 }

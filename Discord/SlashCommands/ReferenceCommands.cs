@@ -32,19 +32,38 @@ namespace JukeboxDiscordClient.SlashCommands
 
         public async Task GetSpellList(SocketSlashCommand command)
         {
+            long hide = 0;
+            if (command.Data.Options.FirstOrDefault(o => o.Name == "show-everyone") != null)
+            {
+                hide = (long)command.Data.Options.First(o => o.Name == "show-everyone").Value;
+            }
+            await command.DeferAsync(ephemeral: !(hide > 0));
+
             var className = (string)command.Data.Options.First(o => o.Name == "class").Value;
             var spellList = _api.GetSpellList(className);
+            var levels = spellList.Select(s => s.level).Distinct().OrderBy(i => i).ToList();
 
             var message = $"Spell List for {className}";
-            foreach (var spell in spellList)
+            foreach (var level in levels)
             {
-                message += $"\n{spell.name}";
+                message += $"\n-Level {level} Spells-";
+                foreach (var spell in spellList.Where(s => s.level == level).OrderBy(s => s.name))
+                {
+                    message += $"\n   {spell.name}";
+                }
             }
-            await command.RespondAsync(message, ephemeral: true);
+
+            await command.ModifyOriginalResponseAsync(msg => msg.Content = message);
         }
 
         public async Task GetSpell(SocketSlashCommand command)
         {
+            long hide = 0;
+            if (command.Data.Options.FirstOrDefault(o => o.Name == "show-only-me") != null)
+            {
+                hide = (long)command.Data.Options.First(o => o.Name == "show-only-me").Value;
+            }
+
             var spellName = (string)command.Data.Options.First(o => o.Name == "spell").Value;
             var spell = _api.GetSpell(spellName.ToLower().Replace(' ', '-'));
 
@@ -115,7 +134,7 @@ namespace JukeboxDiscordClient.SlashCommands
                 message += $"\nSub Classes: {(string.Join(", ", spell.subclasses.Select(s => s.name)))}";
             }
 
-            await command.RespondAsync(message);
+            await command.RespondAsync(message, ephemeral: hide > 0);
         }
 
         public IList<Result> Test()

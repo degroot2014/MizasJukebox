@@ -74,7 +74,6 @@ namespace JukeboxDiscordClient.SlashCommands
                 .AddOption("modifier", ApplicationCommandOptionType.Integer, "Modifier to add to rolls");
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreateDmRoll()
         {
             var global = new SlashCommandBuilder()
@@ -108,7 +107,6 @@ namespace JukeboxDiscordClient.SlashCommands
                     .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreatePercentileRoll()
         {
             var global = new SlashCommandBuilder()
@@ -116,7 +114,6 @@ namespace JukeboxDiscordClient.SlashCommands
                 .WithDescription("Rolls 2 d10 dice for percentile");
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreateRollHealth()
         {
             var global = new SlashCommandBuilder()
@@ -133,7 +130,6 @@ namespace JukeboxDiscordClient.SlashCommands
                     .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreateConditions()
         {
             //api call
@@ -154,7 +150,6 @@ namespace JukeboxDiscordClient.SlashCommands
             global.AddOption(options);
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreateSpellList()
         {
             var global = new SlashCommandBuilder()
@@ -175,7 +170,6 @@ namespace JukeboxDiscordClient.SlashCommands
                     .WithType(ApplicationCommandOptionType.String));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-
         private async Task CreateSpell()
         {
             var global = new SlashCommandBuilder()

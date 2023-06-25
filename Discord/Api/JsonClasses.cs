@@ -8,6 +8,13 @@ namespace JukeboxDiscordClient.Api
         public List<Result> results { get; set; }
     }
 
+    public class BasicResult
+    {
+        public string index { get; set; }
+        public string name { get; set; }
+        public string url { get; set; }
+    }
+
     public class Result
     {
         public string index { get; set; }
@@ -27,14 +34,14 @@ namespace JukeboxDiscordClient.Api
         public string attack_type { get; set; }
         public Damage damage { get; set; }
         public Dc dc { get; set; }
-        public School school { get; set; }
-        public List<Class> classes { get; set; }
-        public List<Subclass> subclasses { get; set; }
+        public BasicResult school { get; set; }
+        public List<BasicResult> classes { get; set; }
+        public List<BasicResult> subclasses { get; set; }
     }
 
     public class Damage
     {
-        public DamageType damage_type { get; set; }
+        public BasicResult damage_type { get; set; }
         public DamageAtCharacterLevel damage_at_character_level { get; set; }
         public DamageAtSlotLevel damage_at_slot_level { get; set; }
     }
@@ -234,45 +241,11 @@ namespace JukeboxDiscordClient.Api
         }
     }
 
-    public class DamageType
-    {
-        public string index { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
-    }
-
+    
     public class Dc
     {
-        public DcType dc_type { get; set; }
+        public BasicResult dc_type { get; set; }
         public string dc_success { get; set; }
-    }
-
-    public class DcType
-    {
-        public string index { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
-    }
-
-    public class School
-    {
-        public string index { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
-    }
-
-    public class Subclass
-    {
-        public string index { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
-    }
-
-    public class Class
-    {
-        public string index { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
     }
 
     public class AreaOfEffect

@@ -1,14 +1,17 @@
 ﻿using RestSharp;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JukeboxDiscordClient.Api
 {
     public class dnd5eapi
     {
         private const string _url = "https://www.dnd5eapi.co/api/";
+        private IMemoryCache _spells;
 
-        public dnd5eapi()
+        public dnd5eapi() 
         {
-
+            var options = new MemoryCacheOptions();
+            _spells = new MemoryCache(options);
         }
 
         public IList<Result> GetConditions()
@@ -23,12 +26,24 @@ namespace JukeboxDiscordClient.Api
 
         public IList<Result> GetSpellList(string className)
         {
-            return CallApi($"classes/{className}/spells").results;
+            var spells = CallApi($"classes/{className}/spells").results;
+            var fullSpells = new List<Result>();
+            foreach(var spell in spells)
+            {
+                fullSpells.Add(GetSpell(spell.index));
+            }
+            return fullSpells;
         }
 
         public Result GetSpell(string name)
         {
-            return CallApiResult($"spells/{name}");
+            if(_spells.TryGetValue(name, out Result result))
+            {
+                return result;
+            }
+            var spell = CallApiResult($"spells/{name}");
+            _spells.Set(spell.index, spell);
+            return spell;
         }
 
         private Root CallApi(string command)

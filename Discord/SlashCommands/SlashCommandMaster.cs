@@ -167,7 +167,13 @@ namespace JukeboxDiscordClient.SlashCommands
                     .AddChoice("Sorcerer", "sorcerer")
                     .AddChoice("Warlock", "warlock")
                     .AddChoice("Wizard", "wizard")
-                    .WithType(ApplicationCommandOptionType.String));
+                    .WithType(ApplicationCommandOptionType.String))
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("show-everyone")
+                    .WithDescription("Shows everyone results")
+                    .WithRequired(false)
+                    .AddChoice("Yes", 1)
+                    .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
         private async Task CreateSpell()
@@ -175,7 +181,13 @@ namespace JukeboxDiscordClient.SlashCommands
             var global = new SlashCommandBuilder()
                 .WithName("spell")
                 .WithDescription("Gets Spell information for a spell")
-                .AddOption("spell", ApplicationCommandOptionType.String, "Name of Spell", true);
+                .AddOption("spell", ApplicationCommandOptionType.String, "Name of Spell", true)
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("show-only-me")
+                    .WithDescription("Shows only you the results")
+                    .WithRequired(false)
+                    .AddChoice("Yes", 1)
+                    .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
     }

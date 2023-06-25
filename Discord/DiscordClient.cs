@@ -47,11 +47,6 @@ namespace JukeboxDiscordClient
             await InstallCommandsAsync();
         }
 
-        public async Task SetLinkCommands(string mapFile)
-        {
-            _settings.MapCommand = mapFile;
-        }
-
         public IReadOnlyCollection<SocketGuild> GetServers()
         {
             return _client.Guilds;

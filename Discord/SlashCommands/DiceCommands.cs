@@ -4,6 +4,9 @@ namespace JukeboxDiscordClient.SlashCommands
 {
     public static class DiceCommands
     {
+        private static readonly Random random = new ();
+        private static readonly object syncLock = new ();
+
         public static async Task Roll(SocketSlashCommand command)
         {
             var dice = Convert.ToInt32((long)command.Data.Options.First(o => o.Name == "dice").Value);
@@ -87,15 +90,22 @@ namespace JukeboxDiscordClient.SlashCommands
                 sides = Math.Min(starting + 3, sides);
             }
 
-            var rnd = new Random();
             for (int i = 0; i < rolls; i++)
             {
-                var diceRoll = rnd.Next(starting, sides);
+                var diceRoll = RandomNumber(starting, sides);
                 message += $"\nRoll {i + 1}: {diceRoll + modifier}";
                 diceRolls.Add(diceRoll);
             }
 
             return diceRolls;
+        }
+
+        private static int RandomNumber(int min, int max)
+        {
+            lock (syncLock)
+            {
+                return random.Next(min, max);
+            }
         }
     }
 }

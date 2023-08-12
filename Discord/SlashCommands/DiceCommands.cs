@@ -80,6 +80,7 @@ namespace JukeboxDiscordClient.SlashCommands
             if (sides == 10)
             {
                 starting = 0;
+                sides = 9;
             }
             if (rig == 1)
             {
@@ -92,7 +93,7 @@ namespace JukeboxDiscordClient.SlashCommands
 
             for (int i = 0; i < rolls; i++)
             {
-                var diceRoll = RandomNumber(starting, sides);
+                var diceRoll = RandomNumber(starting, sides + 1);
                 message += $"\nRoll {i + 1}: {diceRoll + modifier}";
                 diceRolls.Add(diceRoll);
             }

@@ -37,28 +37,42 @@ namespace Miza_sJukebox
 
         private void GetMusicTracks()
         {
-            musicListBox.Items.Clear();
-            string[] allMusic = Array.Empty<string>();
+            musicTreeView.Nodes.Clear();
+            musicTreeView.Nodes.Add(TraverseDirectory(_settings.MusicFolderPath));           
+        }
+
+        private TreeNode TraverseDirectory(string path)
+        {
+            TreeNode result = new TreeNode(path);
+            foreach (var subdirectory in Directory.GetDirectories(path))
+            {
+                result.Nodes.Add(TraverseDirectory(subdirectory));
+            }
+
+            return AddSongs(result, path);
+        }
+
+        private TreeNode AddSongs(TreeNode currentNode, string path)
+        {
+            string[] music = Array.Empty<string>();
             try
             {
-                allMusic = Directory.GetFiles(_settings.MusicFolderPath,
-                "*.mp3",
-                SearchOption.AllDirectories);
+                music = Directory.GetFiles(path, "*.mp3", SearchOption.TopDirectoryOnly);
             }
-            catch(UnauthorizedAccessException e)
+            catch (UnauthorizedAccessException e)
             {
-                MessageBox.Show($"Searching selected Folder only. {e.Message}");
-                allMusic = Directory.GetFiles(_settings.MusicFolderPath,
-                "*.mp3",
-                SearchOption.TopDirectoryOnly);
+                MessageBox.Show($"Cannot Access Folder. {e.Message}");
             }
-            foreach(var song in allMusic)
+
+            foreach (var song in music)
             {
                 var splitPath = song.Split('\\');
                 var songName = splitPath[^1];
                 songName = songName.Remove(songName.Length - 4, 4);
-                musicListBox.Items.Add(new MyListObject(songName, song));
+                currentNode.Nodes.Add(song, songName);
             }
+
+            return currentNode;
         }
 
         private void connectButton_Click(object sender, EventArgs e)
@@ -80,6 +94,10 @@ namespace Miza_sJukebox
 
                     connectionStatus.Text = "Connected";
                     connectionStatus.ForeColor = Color.DarkGreen;
+
+                    playButton.Enabled = true;
+                    pauseButton.Enabled = true;
+                    stopButton.Enabled = true;
                 }
                 else
                 {
@@ -102,6 +120,10 @@ namespace Miza_sJukebox
             
             connectionStatus.Text = "Disconnected";
             connectionStatus.ForeColor = Color.Red;
+
+            playButton.Enabled = false;
+            pauseButton.Enabled = false;
+            stopButton.Enabled = false;
         }
 
         private void serverList_SelectedIndexChanged(object sender, EventArgs e)
@@ -130,16 +152,33 @@ namespace Miza_sJukebox
 
         private async void playButton_Click(object sender, EventArgs e)
         {
-            var song = (MyListObject)musicListBox.SelectedItem;
+            var song = musicTreeView.SelectedNode;
             if(song != null)
             {
-                musicErrorProvider.SetError(musicListBox, string.Empty);
-                currentlyPlaying.Text = song.Name;
-                await Task.Run(() => _discordClient.PlaySong(song.Path));
+                if (song.Nodes.Count == 0)
+                {
+                    if (_discordClient.IsPlaying())
+                    {
+                        if (_isPaused)
+                        {
+                            pauseButton.Text = _isPaused ? "Pause" : "Resume";
+                            _isPaused = !_isPaused;
+                        }
+                        _discordClient.StopSong();
+
+                        while (_discordClient.IsPlaying())
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                    musicErrorProvider.SetError(musicTreeView, string.Empty);
+                    currentlyPlaying.Text = song.Text;
+                    await Task.Run(() => _discordClient.PlaySong(song.Name));
+                }
             }
             else
             {
-                musicErrorProvider.SetError(musicListBox, "Must select a Song to Play.");
+                musicErrorProvider.SetError(musicTreeView, "Must select a Song to Play.");
             }
         }
 
@@ -170,6 +209,14 @@ namespace Miza_sJukebox
             {
                 _settings.MapCommand = mapCommand.Text = mapOpenFileDialog.FileName;
                 _settings.SaveSettings();
+            }
+        }
+
+        private void musicTreeView_DoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (playButton.Enabled)
+            {
+                playButton_Click(sender, e);
             }
         }
     }

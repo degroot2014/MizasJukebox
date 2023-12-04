@@ -71,6 +71,11 @@ namespace JukeboxDiscordClient
             await _voiceChannel.DisconnectAsync();
         }
 
+        public bool IsPlaying() 
+        { 
+            return _playing; 
+        }
+
         public bool PauseSong()
         {
             if (_playing)
@@ -104,6 +109,7 @@ namespace JukeboxDiscordClient
             {
                 TogglePlaying();
             }
+
             _ffmpeg = CreateStream(path);
             _output = _ffmpeg.StandardOutput.BaseStream;
             await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);

@@ -38,7 +38,6 @@
             this.connectionStatus = new System.Windows.Forms.Label();
             this.disconnectButton = new System.Windows.Forms.Button();
             this.connectButton = new System.Windows.Forms.Button();
-            this.musicListBox = new System.Windows.Forms.ListBox();
             this.playButton = new System.Windows.Forms.Button();
             this.stopButton = new System.Windows.Forms.Button();
             this.pauseButton = new System.Windows.Forms.Button();
@@ -46,6 +45,7 @@
             this.currentlyPlayingLabel = new System.Windows.Forms.Label();
             this.serverErrorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.musicPanel = new System.Windows.Forms.Panel();
+            this.musicTreeView = new System.Windows.Forms.TreeView();
             this.currentlyPlaying = new System.Windows.Forms.Label();
             this.currentMusicFolder = new System.Windows.Forms.Label();
             this.currentMusicFolderLabel = new System.Windows.Forms.Label();
@@ -157,20 +157,9 @@
             this.connectButton.UseVisualStyleBackColor = true;
             this.connectButton.Click += new System.EventHandler(this.connectButton_Click);
             // 
-            // musicListBox
-            // 
-            this.musicListBox.DisplayMember = "\"Name\"";
-            this.musicListBox.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.musicListBox.FormattingEnabled = true;
-            this.musicListBox.ItemHeight = 25;
-            this.musicListBox.Location = new System.Drawing.Point(3, 94);
-            this.musicListBox.Name = "musicListBox";
-            this.musicListBox.Size = new System.Drawing.Size(461, 429);
-            this.musicListBox.TabIndex = 1;
-            this.musicListBox.ValueMember = "\"Path\"";
-            // 
             // playButton
             // 
+            this.playButton.Enabled = false;
             this.playButton.ForeColor = System.Drawing.SystemColors.ControlText;
             this.playButton.Location = new System.Drawing.Point(3, 2);
             this.playButton.Name = "playButton";
@@ -182,6 +171,7 @@
             // 
             // stopButton
             // 
+            this.stopButton.Enabled = false;
             this.stopButton.ForeColor = System.Drawing.SystemColors.ControlText;
             this.stopButton.Location = new System.Drawing.Point(183, 2);
             this.stopButton.Name = "stopButton";
@@ -193,6 +183,7 @@
             // 
             // pauseButton
             // 
+            this.pauseButton.Enabled = false;
             this.pauseButton.ForeColor = System.Drawing.SystemColors.ControlText;
             this.pauseButton.Location = new System.Drawing.Point(93, 2);
             this.pauseButton.Name = "pauseButton";
@@ -225,12 +216,12 @@
             // 
             // musicPanel
             // 
+            this.musicPanel.Controls.Add(this.musicTreeView);
             this.musicPanel.Controls.Add(this.currentlyPlaying);
             this.musicPanel.Controls.Add(this.currentlyPlayingLabel);
             this.musicPanel.Controls.Add(this.currentMusicFolder);
             this.musicPanel.Controls.Add(this.currentMusicFolderLabel);
             this.musicPanel.Controls.Add(this.folderSelectButton);
-            this.musicPanel.Controls.Add(this.musicListBox);
             this.musicPanel.Controls.Add(this.stopButton);
             this.musicPanel.Controls.Add(this.playButton);
             this.musicPanel.Controls.Add(this.pauseButton);
@@ -238,6 +229,15 @@
             this.musicPanel.Name = "musicPanel";
             this.musicPanel.Size = new System.Drawing.Size(502, 524);
             this.musicPanel.TabIndex = 6;
+            // 
+            // musicTreeView
+            // 
+            this.musicTreeView.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.musicTreeView.Location = new System.Drawing.Point(3, 94);
+            this.musicTreeView.Name = "musicTreeView";
+            this.musicTreeView.Size = new System.Drawing.Size(461, 430);
+            this.musicTreeView.TabIndex = 9;
+            this.musicTreeView.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.musicTreeView_DoubleClick);
             // 
             // currentlyPlaying
             // 
@@ -362,7 +362,6 @@
         private Label serverNameLabel;
         private Button connectButton;
         private Button disconnectButton;
-        private ListBox musicListBox;
         private Button playButton;
         private Button stopButton;
         private Button pauseButton;
@@ -383,5 +382,6 @@
         private LinkLabel mapCommandLabel;
         private Label discordCommandSettingsLabel;
         private OpenFileDialog mapOpenFileDialog;
+        private TreeView musicTreeView;
     }
 }

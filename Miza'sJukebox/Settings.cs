@@ -5,7 +5,7 @@ namespace Miza_sJukebox
     public class Settings
     {
         private const string JSON_FILE = "settings.json";
-        public string MusicFolderPath { get; set; } = "C:\\";
+        public string MusicFolderPath { get; set; } = "C:\\Users\\Eric\\Music";
         public string MapCommand { get; set; } = string.Empty;
 
         public bool LoadSettings()
@@ -19,6 +19,10 @@ namespace Miza_sJukebox
                     MusicFolderPath = newSettings.MusicFolderPath;
                     MapCommand = newSettings.MapCommand;
                 }
+            }
+            else 
+            {
+                return false;
             }
             return true;
         }

@@ -30,7 +30,16 @@ namespace Miza_sJukebox
 
         private void InitializeSettings()
         {
-            _settings.LoadSettings();
+            if(!_settings.LoadSettings())
+            {
+                var result = musicFolderBrowserDialog.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    _settings.MusicFolderPath = currentMusicFolder.Text = musicFolderBrowserDialog.SelectedPath;
+                    _settings.SaveSettings();
+                }
+            }
             currentMusicFolder.Text = _settings.MusicFolderPath;
             mapCommand.Text = _settings.MapCommand;
         }
@@ -46,6 +55,7 @@ namespace Miza_sJukebox
             TreeNode result = new TreeNode(path);
             foreach (var subdirectory in Directory.GetDirectories(path))
             {
+
                 result.Nodes.Add(TraverseDirectory(subdirectory));
             }
 

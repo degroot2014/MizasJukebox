@@ -36,8 +36,8 @@
             voiceChannelLabel = new Label();
             serverNameLabel = new Label();
             connectionStatus = new Label();
-            disconnectButton = new Button();
             connectButton = new Button();
+            disconnectButton = new Button();
             playButton = new Button();
             stopButton = new Button();
             pauseButton = new Button();
@@ -45,6 +45,7 @@
             currentlyPlayingLabel = new Label();
             serverErrorProvider = new ErrorProvider(components);
             musicPanel = new Panel();
+            loopButton = new Button();
             musicTreeView = new TreeView();
             currentlyPlaying = new Label();
             currentMusicFolder = new Label();
@@ -134,18 +135,6 @@
             connectionStatus.TabIndex = 0;
             connectionStatus.Text = "Connecting to Discord...";
             // 
-            // disconnectButton
-            // 
-            disconnectButton.ForeColor = SystemColors.Desktop;
-            disconnectButton.Location = new Point(120, 4);
-            disconnectButton.Name = "disconnectButton";
-            disconnectButton.Size = new Size(75, 23);
-            disconnectButton.TabIndex = 1;
-            disconnectButton.Text = "Disconnect";
-            disconnectButton.UseVisualStyleBackColor = true;
-            disconnectButton.Visible = false;
-            disconnectButton.Click += disconnectButton_Click;
-            // 
             // connectButton
             // 
             connectButton.ForeColor = SystemColors.ControlText;
@@ -158,8 +147,21 @@
             connectButton.Visible = false;
             connectButton.Click += connectButton_Click;
             // 
+            // disconnectButton
+            // 
+            disconnectButton.ForeColor = SystemColors.Desktop;
+            disconnectButton.Location = new Point(120, 4);
+            disconnectButton.Name = "disconnectButton";
+            disconnectButton.Size = new Size(75, 23);
+            disconnectButton.TabIndex = 1;
+            disconnectButton.Text = "Disconnect";
+            disconnectButton.UseVisualStyleBackColor = true;
+            disconnectButton.Visible = false;
+            disconnectButton.Click += disconnectButton_Click;
+            // 
             // playButton
             // 
+            playButton.BackColor = SystemColors.ButtonShadow;
             playButton.Enabled = false;
             playButton.ForeColor = SystemColors.ControlText;
             playButton.Location = new Point(3, 2);
@@ -167,11 +169,12 @@
             playButton.Size = new Size(80, 50);
             playButton.TabIndex = 2;
             playButton.Text = "Play";
-            playButton.UseVisualStyleBackColor = true;
+            playButton.UseVisualStyleBackColor = false;
             playButton.Click += playButton_Click;
             // 
             // stopButton
             // 
+            stopButton.BackColor = SystemColors.ButtonShadow;
             stopButton.Enabled = false;
             stopButton.ForeColor = SystemColors.ControlText;
             stopButton.Location = new Point(183, 2);
@@ -179,11 +182,12 @@
             stopButton.Size = new Size(80, 50);
             stopButton.TabIndex = 3;
             stopButton.Text = "Stop";
-            stopButton.UseVisualStyleBackColor = true;
+            stopButton.UseVisualStyleBackColor = false;
             stopButton.Click += stopButton_Click;
             // 
             // pauseButton
             // 
+            pauseButton.BackColor = SystemColors.ButtonShadow;
             pauseButton.Enabled = false;
             pauseButton.ForeColor = SystemColors.ControlText;
             pauseButton.Location = new Point(93, 2);
@@ -191,7 +195,7 @@
             pauseButton.Size = new Size(80, 50);
             pauseButton.TabIndex = 4;
             pauseButton.Text = "Pause";
-            pauseButton.UseVisualStyleBackColor = true;
+            pauseButton.UseVisualStyleBackColor = false;
             pauseButton.Click += pauseButton_Click;
             // 
             // voiceChannelErrorProvider
@@ -217,6 +221,7 @@
             // 
             // musicPanel
             // 
+            musicPanel.Controls.Add(loopButton);
             musicPanel.Controls.Add(musicTreeView);
             musicPanel.Controls.Add(currentlyPlaying);
             musicPanel.Controls.Add(currentlyPlayingLabel);
@@ -230,6 +235,19 @@
             musicPanel.Name = "musicPanel";
             musicPanel.Size = new Size(502, 524);
             musicPanel.TabIndex = 6;
+            // 
+            // loopButton
+            // 
+            loopButton.BackColor = SystemColors.ButtonShadow;
+            loopButton.Enabled = false;
+            loopButton.ForeColor = SystemColors.ControlText;
+            loopButton.Location = new Point(272, 2);
+            loopButton.Name = "loopButton";
+            loopButton.Size = new Size(80, 49);
+            loopButton.TabIndex = 12;
+            loopButton.Text = "Loop";
+            loopButton.UseVisualStyleBackColor = false;
+            loopButton.Click += loopButton_Click;
             // 
             // musicTreeView
             // 
@@ -384,5 +402,6 @@
         private Label discordCommandSettingsLabel;
         private OpenFileDialog mapOpenFileDialog;
         private TreeView musicTreeView;
+        private Button loopButton;
     }
 }

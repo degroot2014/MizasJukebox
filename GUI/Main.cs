@@ -7,6 +7,7 @@ namespace MizasJukebox
         private DiscordClient _discordClient;
         private Settings _settings = new();
         private bool _isPaused = false;
+        private bool _isLooping = false;
 
         public Main()
         {
@@ -31,7 +32,7 @@ namespace MizasJukebox
 
         private void InitializeSettings()
         {
-            if(!_settings.LoadSettings())
+            if (!_settings.LoadSettings())
             {
                 var result = musicFolderBrowserDialog.ShowDialog();
 
@@ -48,7 +49,7 @@ namespace MizasJukebox
         private void GetMusicTracks()
         {
             musicTreeView.Nodes.Clear();
-            musicTreeView.Nodes.Add(TraverseDirectory(_settings.MusicFolderPath));           
+            musicTreeView.Nodes.Add(TraverseDirectory(_settings.MusicFolderPath));
         }
 
         private TreeNode TraverseDirectory(string path)
@@ -65,10 +66,14 @@ namespace MizasJukebox
 
         private TreeNode AddSongs(TreeNode currentNode, string path)
         {
-            string[] music = Array.Empty<string>();
+            var music = new List<string>();
+            string[] musicExtensions = new[] { "*.mp3", "*.mp4", "*.wma", "*.wav", "*.m4a" };
             try
             {
-                music = Directory.GetFiles(path, "*.mp3", SearchOption.TopDirectoryOnly);
+                foreach (var extension in musicExtensions)
+                {
+                    music.AddRange(Directory.GetFiles(path, extension, SearchOption.TopDirectoryOnly));
+                }
             }
             catch (UnauthorizedAccessException e)
             {
@@ -99,15 +104,16 @@ namespace MizasJukebox
                     voiceChannelErrorProvider.SetError(voiceChannelList, string.Empty);
 
                     _discordClient.ConnectToChannel(selectedServer.Id, selectedVoiceChannel.Id);
-    
+
                     connectButton.Hide();
                     disconnectButton.Show();
 
                     SetConnectionStatus("Connected", Color.DarkGreen);
 
-                    playButton.Enabled = true;
-                    pauseButton.Enabled = true;
-                    stopButton.Enabled = true;
+                    EnableButton(playButton);
+                    EnableButton(pauseButton);
+                    EnableButton(stopButton);
+                    EnableButton(loopButton);
                 }
                 else
                 {
@@ -118,7 +124,7 @@ namespace MizasJukebox
             {
                 serverErrorProvider.SetError(serverList, "Must Select a Server.");
             }
-            
+
         }
 
         private void disconnectButton_Click(object sender, EventArgs e)
@@ -127,12 +133,13 @@ namespace MizasJukebox
 
             disconnectButton.Hide();
             connectButton.Show();
-            
+
             SetConnectionStatus("Disconnected", Color.Red);
 
-            playButton.Enabled = false;
-            pauseButton.Enabled = false;
-            stopButton.Enabled = false;
+            DisableButton(playButton);
+            DisableButton(pauseButton);
+            DisableButton(stopButton);
+            DisableButton(loopButton);
         }
 
         private void serverList_SelectedIndexChanged(object sender, EventArgs e)
@@ -162,7 +169,7 @@ namespace MizasJukebox
         private async void playButton_Click(object sender, EventArgs e)
         {
             var song = musicTreeView.SelectedNode;
-            if(song != null)
+            if (song != null)
             {
                 if (song.Nodes.Count == 0)
                 {
@@ -183,6 +190,7 @@ namespace MizasJukebox
                     musicErrorProvider.SetError(musicTreeView, string.Empty);
                     currentlyPlaying.Text = song.Text;
                     await Task.Run(() => _discordClient.PlaySong(song.Name));
+                    currentlyPlaying.Text = string.Empty;
                 }
             }
             else
@@ -193,7 +201,7 @@ namespace MizasJukebox
 
         private void pauseButton_Click(object sender, EventArgs e)
         {
-            if(_discordClient.PauseSong())
+            if (_discordClient.PauseSong())
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
@@ -202,7 +210,7 @@ namespace MizasJukebox
 
         private void stopButton_Click(object sender, EventArgs e)
         {
-            if(_isPaused)
+            if (_isPaused)
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
@@ -233,6 +241,32 @@ namespace MizasJukebox
         {
             connectionStatus.Text = status;
             connectionStatus.ForeColor = color;
+        }
+
+        private void loopButton_Click(object sender, EventArgs e)
+        {
+            _isLooping = !_isLooping;
+            _discordClient.SetLooping(_isLooping);
+            if (_isLooping)
+            {
+                loopButton.Text = "Stop Looping";
+            }
+            else
+            {
+                loopButton.Text = "Loop";
+            }
+        }
+
+        private void DisableButton(Button button)
+        {
+            button.Enabled = false;
+            button.BackColor = Color.Gray;
+        }
+
+        private void EnableButton(Button button)
+        {
+            button.Enabled = true;
+            button.BackColor = SystemColors.ControlLightLight;
         }
     }
 }

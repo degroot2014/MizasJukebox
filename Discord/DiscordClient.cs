@@ -27,6 +27,8 @@ namespace JukeboxDiscordClient
 
         private static bool _paused = false;
         private static bool _playing = false;
+        private static bool _looping = false;
+        private static bool _endLoop = false;
 
         public static Task Main(string[] args) => new DiscordClient().StartAsync();
 
@@ -86,6 +88,11 @@ namespace JukeboxDiscordClient
             return false;
         }
 
+        public void SetLooping(bool loop)
+        {
+            _looping = loop;
+        }
+
         private void TogglePlaying()
         {
             _playing = !_playing;
@@ -96,6 +103,7 @@ namespace JukeboxDiscordClient
             if (_playing)
             {
                 _ffmpeg.Kill();
+                _endLoop = true;
             }
         }
 
@@ -110,43 +118,51 @@ namespace JukeboxDiscordClient
                 TogglePlaying();
             }
 
-            _ffmpeg = CreateStream(path);
-            _output = _ffmpeg.StandardOutput.BaseStream;
-            await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);
-
-            while (true)
+            do
             {
-                //Music finished or broken
-                if (_ffmpeg.HasExited || discord == null)
+                _ffmpeg = CreateStream(path);
+                _output = _ffmpeg.StandardOutput.BaseStream;
+                await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);
+            
+                while (true)
                 {
-                    CloseFileStreams();
+                    //Music finished or broken
+                    if (_ffmpeg.HasExited || discord == null)
+                    {
+                        CloseFileStreams();
+                        break;
+                    }
+
+                    if (_paused)
+                        continue;
+
+                    var buffer = new byte[BLOCK_SIZE];
+                    var byteCount = await _output.ReadAsync(buffer, 0, BLOCK_SIZE);
+
+                    //File cannot be read or ending
+                    if (byteCount <= 0)
+                        break;
+
+                    //send music bytes to discord
+                    try
+                    {
+                        await discord.WriteAsync(buffer, 0, byteCount);
+                    }
+                    catch (Exception e)
+                    {
+                        await discord?.FlushAsync();
+                        throw;
+                    }
+                }
+
+                //song is done, anything left over if stopped should flush buffer
+                await discord?.FlushAsync();
+                if(_endLoop)
+                {
+                    _endLoop = false;
                     break;
                 }
-
-                if (_paused)
-                    continue;
-
-                var buffer = new byte[BLOCK_SIZE];
-                var byteCount = await _output.ReadAsync(buffer, 0, BLOCK_SIZE);
-
-                //File cannot be read or ending
-                if (byteCount <= 0)
-                    break;
-
-                //send music bytes to discord
-                try
-                {
-                    await discord.WriteAsync(buffer, 0, byteCount);
-                }
-                catch (Exception e)
-                {
-                    await discord?.FlushAsync();
-                    throw;
-                }
-            }
-
-            //song is done, anything left over if stopped should flush buffer
-            await discord?.FlushAsync();
+            } while(_looping);
             _playing = false;
             _paused = false;
         }

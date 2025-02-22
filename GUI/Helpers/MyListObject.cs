@@ -1,4 +1,4 @@
-﻿namespace Miza_sJukebox.Helpers
+﻿namespace MizasJukebox.Helpers
 {
     public class MyListObject
     {

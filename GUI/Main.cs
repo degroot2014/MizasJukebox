@@ -1,7 +1,6 @@
 using JukeboxDiscordClient;
-using Miza_sJukebox.Helpers;
 
-namespace Miza_sJukebox
+namespace MizasJukebox
 {
     public partial class Main : Form
     {
@@ -21,6 +20,8 @@ namespace Miza_sJukebox
         {
             _discordClient = new DiscordClient();
             await _discordClient.StartAsync();
+            SetConnectionStatus("Disconnected", Color.Red);
+            connectButton.Show();
             var servers = _discordClient.GetServers();
             foreach (var server in servers)
             {
@@ -102,8 +103,7 @@ namespace Miza_sJukebox
                     connectButton.Hide();
                     disconnectButton.Show();
 
-                    connectionStatus.Text = "Connected";
-                    connectionStatus.ForeColor = Color.DarkGreen;
+                    SetConnectionStatus("Connected", Color.DarkGreen);
 
                     playButton.Enabled = true;
                     pauseButton.Enabled = true;
@@ -128,8 +128,7 @@ namespace Miza_sJukebox
             disconnectButton.Hide();
             connectButton.Show();
             
-            connectionStatus.Text = "Disconnected";
-            connectionStatus.ForeColor = Color.Red;
+            SetConnectionStatus("Disconnected", Color.Red);
 
             playButton.Enabled = false;
             pauseButton.Enabled = false;
@@ -228,6 +227,12 @@ namespace Miza_sJukebox
             {
                 playButton_Click(sender, e);
             }
+        }
+
+        private void SetConnectionStatus(string status, Color color)
+        {
+            connectionStatus.Text = status;
+            connectionStatus.ForeColor = color;
         }
     }
 }

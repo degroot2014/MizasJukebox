@@ -1,4 +1,4 @@
-namespace Miza_sJukebox
+namespace MizasJukebox
 {
     internal static class Program
     {

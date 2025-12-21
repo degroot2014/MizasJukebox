@@ -1,4 +1,4 @@
-﻿using Discord;
+﻿/*using Discord;
 using Discord.WebSocket;
 
 namespace JukeboxDiscordClient.SlashCommands
@@ -192,3 +192,4 @@ namespace JukeboxDiscordClient.SlashCommands
         }
     }
 }
+*/

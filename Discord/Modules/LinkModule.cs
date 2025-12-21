@@ -1,4 +1,4 @@
-﻿using Discord.Commands;
+﻿/*using Discord.Commands;
 using JukeboxDiscordClient.Domain;
 
 namespace JukeboxDiscordClient.Modules
@@ -16,3 +16,4 @@ namespace JukeboxDiscordClient.Modules
         }
     }
 }
+*/

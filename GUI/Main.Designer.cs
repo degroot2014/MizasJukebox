@@ -84,14 +84,14 @@
             // serverList
             // 
             serverList.BackColor = SystemColors.ControlDarkDark;
-            serverList.DisplayMember = "\"Name\"";
+            serverList.DisplayMember = "Name";
             serverList.ForeColor = SystemColors.ControlLightLight;
             serverList.FormattingEnabled = true;
             serverList.Location = new Point(94, 32);
             serverList.Name = "serverList";
             serverList.Size = new Size(157, 23);
             serverList.TabIndex = 5;
-            serverList.ValueMember = "\"Id\"";
+            serverList.ValueMember = "Id";
             serverList.SelectedIndexChanged += serverList_SelectedIndexChanged;
             // 
             // voiceChannelList

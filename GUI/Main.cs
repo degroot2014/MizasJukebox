@@ -1,4 +1,6 @@
 using JukeboxDiscordClient;
+using NetCord.Gateway;
+using NetCord.Gateway.Voice;
 
 namespace MizasJukebox
 {
@@ -93,7 +95,7 @@ namespace MizasJukebox
 
         private void connectButton_Click(object sender, EventArgs e)
         {
-            var selectedServer = (Discord.WebSocket.SocketGuild)serverList.SelectedItem;
+            /*var selectedServer = (Discord.WebSocket.SocketGuild)serverList.SelectedItem;
             if (selectedServer != null)
             {
                 serverErrorProvider.SetError(serverList, string.Empty);
@@ -123,12 +125,13 @@ namespace MizasJukebox
             else
             {
                 serverErrorProvider.SetError(serverList, "Must Select a Server.");
-            }
+            }*/
 
         }
 
         private void disconnectButton_Click(object sender, EventArgs e)
         {
+            /*
             _discordClient.DisconnectFromChannel();
 
             disconnectButton.Hide();
@@ -140,12 +143,13 @@ namespace MizasJukebox
             DisableButton(pauseButton);
             DisableButton(stopButton);
             DisableButton(loopButton);
+            */
         }
 
         private void serverList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var item = (Discord.WebSocket.SocketGuild)serverList.SelectedItem;
-            var channels = _discordClient.GetChannelsForServer(item.Id);
+            var guild = (Guild)serverList.SelectedItem;
+            var channels = guild.Channels.Values;
 
             voiceChannelList.Items.Clear();
             foreach (var channel in channels)
@@ -168,6 +172,7 @@ namespace MizasJukebox
 
         private async void playButton_Click(object sender, EventArgs e)
         {
+            /*
             var song = musicTreeView.SelectedNode;
             if (song != null)
             {
@@ -197,25 +202,30 @@ namespace MizasJukebox
             {
                 musicErrorProvider.SetError(musicTreeView, "Must select a Song to Play.");
             }
+            */
         }
 
         private void pauseButton_Click(object sender, EventArgs e)
         {
+            /*
             if (_discordClient.PauseSong())
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
             }
+            */
         }
 
         private void stopButton_Click(object sender, EventArgs e)
         {
+            /*
             if (_isPaused)
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
             }
             _discordClient.StopSong();
+            */
         }
 
         private void mapCommandLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -245,6 +255,7 @@ namespace MizasJukebox
 
         private void loopButton_Click(object sender, EventArgs e)
         {
+            /*
             _isLooping = !_isLooping;
             _discordClient.SetLooping(_isLooping);
             if (_isLooping)
@@ -255,6 +266,7 @@ namespace MizasJukebox
             {
                 loopButton.Text = "Loop";
             }
+            */
         }
 
         private void DisableButton(Button button)

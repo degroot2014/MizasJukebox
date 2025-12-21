@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
-using Discord;
-using Discord.WebSocket;
-using Discord.Audio;
-using Discord.Commands;
-using JukeboxDiscordClient.SlashCommands;
-using JukeboxDiscordClient.Modules;
+using NetCord;
+using NetCord.Gateway;
+using NetCord.Logging;
+//using JukeboxDiscordClient.SlashCommands;
+//using JukeboxDiscordClient.Modules;
 using JukeboxDiscordClient.Domain;
 
 namespace JukeboxDiscordClient
@@ -15,14 +14,14 @@ namespace JukeboxDiscordClient
         private const int BLOCK_SIZE = 1920;
         private const char PREFIX = '!';
 
-        private DiscordSocketClient _client;
-        private SocketGuild _guild;
-        private SocketVoiceChannel _voiceChannel;
-        private IAudioClient _audioClient;
+        private GatewayClient _client;
+        //private SocketGuild _guild;
+        //private SocketVoiceChannel _voiceChannel;
+        //private IAudioClient _audioClient;
         private Process _ffmpeg;
         private Stream _output;
-        private CommandService _commands;
-        private SlashCommandMaster _slashCommands;
+        //private CommandService _commands;
+        //private SlashCommandMaster _slashCommands;
         private DiscordSettings _settings;
 
         private static bool _paused = false;
@@ -34,32 +33,39 @@ namespace JukeboxDiscordClient
 
         public async Task StartAsync()
         {
-            var socketConfig = new DiscordSocketConfig() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent };
-            _client = new DiscordSocketClient(socketConfig);
-
-            _client.Log += Log;
             var token = File.ReadAllText(TOKEN);
+            _client = new(new BotToken(token), new GatewayClientConfiguration
+            {
+                Logger = new ConsoleLogger(),
+                Intents = GatewayIntents.All,
+            });
 
-            await _client.LoginAsync(TokenType.Bot, token);
+            //Register Commands
+
             await _client.StartAsync();
-            while (_client.ConnectionState != ConnectionState.Connected) ;
-            while (_client.Guilds.First() == null || _client.Guilds.First().Name == null) ;
+            
 
-            _slashCommands = new SlashCommandMaster(_client);
-            await InstallCommandsAsync();
+            while (_client.Status == WebSocketStatus.Connecting) ;
+            while (_client.Cache.Guilds.Count == 0 || _client.Cache.Guilds.First().Value == null || _client.Cache.Guilds.First().Value.Name == null) ;
+
+            //_slashCommands = new SlashCommandMaster(_client);
+            //await InstallCommandsAsync();
+            //await Task.Delay(-1);
         }
 
-        public IReadOnlyCollection<SocketGuild> GetServers()
+        public IReadOnlyCollection<Guild> GetServers()
         {
-            return _client.Guilds;
+            //Todo : Better handling when no servers are available
+            return _client.Cache.Guilds.Values.ToList();
         }
 
-        public IReadOnlyCollection<SocketVoiceChannel> GetChannelsForServer(ulong serverId)
+        /*public IReadOnlyCollection<SocketVoiceChannel> GetChannelsForServer(ulong serverId)
         {
             var guild = _client.GetGuild(serverId);
             return guild.VoiceChannels;
-        }
+        }*/
 
+        /*
         #region Voice
         public async void ConnectToChannel(ulong serverId, ulong channelId)
         {
@@ -193,6 +199,8 @@ namespace JukeboxDiscordClient
                 _output.Close();
         }
         #endregion
+        */
+        /*
         #region Commands
         private async Task InstallCommandsAsync()
         {
@@ -236,6 +244,7 @@ namespace JukeboxDiscordClient
         }
 
         #endregion
+        */
     }
 }
 

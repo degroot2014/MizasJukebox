@@ -1,5 +1,9 @@
-﻿using JukeboxDiscordClient.Domain;
+﻿using JukeboxDiscordClient.Api;
+using JukeboxDiscordClient.Api.interfaces;
+using JukeboxDiscordClient.Domain;
+using JukeboxDiscordClient.Domain.interfaces;
 using JukeboxDiscordClient.Modules;
+using Microsoft.Extensions.DependencyInjection;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Gateway.Voice;
@@ -39,14 +43,16 @@ namespace JukeboxDiscordClient
         public async Task StartAsync()
         {
             var token = File.ReadAllText(TOKEN);
-            _client = new(new BotToken(token), new GatewayClientConfiguration
-            {
-                Logger = new ConsoleLogger(),
-                Intents = GatewayIntents.AllNonPrivileged | GatewayIntents.MessageContent,
-            });
+            _client = new(new BotToken(token), 
+                new GatewayClientConfiguration
+                {
+                    Logger = new ConsoleLogger(),
+                    Intents = GatewayIntents.AllNonPrivileged | GatewayIntents.MessageContent,
+                });
 
             //Register Commands
-            await InstallCommandsAsync();
+            var provider = SetupServiceProvider();
+            await InstallCommandsAsync(provider);
             await _client.StartAsync();
             
 
@@ -173,8 +179,20 @@ namespace JukeboxDiscordClient
         #endregion
 
         
-        #region Commands
-        private async Task InstallCommandsAsync()
+        #region Setup
+        private ServiceProvider SetupServiceProvider()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<Idnd5eapi, dnd5eapi>();
+            services.AddSingleton<IRandomService, RandomService>();
+            services.AddTransient<DndReferenceModule>();
+            services.AddTransient<DiceModule>();
+
+            var serviceProvider = services.BuildServiceProvider();
+            return serviceProvider;
+        }
+
+        private async Task InstallCommandsAsync(ServiceProvider serviceProvider)
         {
             ApplicationCommandService<ApplicationCommandContext> applicationCommandService = new();
             applicationCommandService.AddModules(typeof(DiceModule).Assembly);
@@ -187,7 +205,7 @@ namespace JukeboxDiscordClient
                     return;
 
                 // Execute the command
-                var result = await applicationCommandService.ExecuteAsync(new ApplicationCommandContext(applicationCommandInteraction, _client));
+                var result = await applicationCommandService.ExecuteAsync(new ApplicationCommandContext(applicationCommandInteraction, _client), serviceProvider);
 
                 // Check if the execution failed
                 if (result is not IFailResult failResult)

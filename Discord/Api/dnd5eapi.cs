@@ -1,9 +1,10 @@
-﻿using RestSharp;
+﻿using JukeboxDiscordClient.Api.interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using RestSharp;
 
 namespace JukeboxDiscordClient.Api
 {
-    public class dnd5eapi
+    public class dnd5eapi : Idnd5eapi
     {
         private const string _url = "https://www.dnd5eapi.co/api/";
         private IMemoryCache _spells;

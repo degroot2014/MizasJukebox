@@ -1,4 +1,5 @@
 ﻿using JukeboxDiscordClient.Api;
+using JukeboxDiscordClient.Api.interfaces;
 using JukeboxDiscordClient.ChoiceProvider;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -6,11 +7,11 @@ using static JukeboxDiscordClient.Domain.CommonEnum;
 
 namespace JukeboxDiscordClient.Modules
 {
-    public class DDReferenceModule : ApplicationCommandModule<ApplicationCommandContext>
+    public class DndReferenceModule : ApplicationCommandModule<ApplicationCommandContext>
     {
-        private dnd5eapi _api;
+        private readonly Idnd5eapi _api;
 
-        public DDReferenceModule(dnd5eapi dndApi)
+        public DndReferenceModule(Idnd5eapi dndApi)
         {
             _api = dndApi;
         }

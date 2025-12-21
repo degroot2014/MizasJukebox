@@ -1,4 +1,6 @@
-﻿using NetCord.Rest;
+﻿using JukeboxDiscordClient.Api.interfaces;
+using JukeboxDiscordClient.Domain.interfaces;
+using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using static JukeboxDiscordClient.Domain.CommonEnum;
 using static JukeboxDiscordClient.Modules.DiceModuleEnums;
@@ -7,18 +9,21 @@ namespace JukeboxDiscordClient.Modules
 {
     public class DiceModule : ApplicationCommandModule<ApplicationCommandContext>
     {
-        private static readonly Random random = new();
-        private static readonly object syncLock = new();
+        private readonly IRandomService _randomService;
+
+        public DiceModule(IRandomService randomService)
+        {
+            _randomService = randomService;
+        }
 
         [SlashCommand("roll", "Roll dice")]
-        public static string Roll(
+        public string Roll(
             [SlashCommandParameter(Name = "dice", Description = "Type of die")] Die dieType,
             [SlashCommandParameter(Name = "rolls", Description = "Number of dice to roll")] long rolls = 1,
             [SlashCommandParameter(Name = "modifier", Description = "Modifier to add to rolls")] long modifier = 0)
         {
             var dice = (int)dieType;
             long rig = 0;
-            long hide = 0;
 
             var message = $"Rolling d{dice} {rolls} {(rolls == 1 ? "time" : "times")} {(modifier > 0 ? $"with modifier of {modifier}" : String.Empty)}";
 
@@ -28,7 +33,7 @@ namespace JukeboxDiscordClient.Modules
         }
 
         [SlashCommand("roll-dm", "Roll dice")]
-        public static InteractionMessageProperties RiggedRoll(
+        public InteractionMessageProperties RiggedRoll(
             [SlashCommandParameter(Name = "dice", Description = "Type of die")] Die dieType,
             [SlashCommandParameter(Name = "rolls", Description = "Number of dice to roll")] long rolls = 1,
             [SlashCommandParameter(Name = "modifier", Description = "Modifier to add to rolls")] long modifier = 0,
@@ -51,7 +56,7 @@ namespace JukeboxDiscordClient.Modules
         }
 
         [SlashCommand("roll-percentile", "Rolls 2 d10 dice for percentile")]
-        public static string RollPercentile()
+        public string RollPercentile()
         {
             var message = $"Rolling 2 d10s for percentile";
             var diceRolls = RollDice(ref message, 10, 2);
@@ -60,7 +65,7 @@ namespace JukeboxDiscordClient.Modules
         }
 
         [SlashCommand("roll-health", "Rolls dice for health potions")]
-        public static string RollHealth([SlashCommandParameter(Name = "type", Description = "Type of Potion")] HealthPotion potionType)
+        public string RollHealth([SlashCommandParameter(Name = "type", Description = "Type of Potion")] HealthPotion potionType)
         {
             var healthPot = (long)potionType;
             var bonusHealth = 0;
@@ -85,7 +90,7 @@ namespace JukeboxDiscordClient.Modules
             return message;
         }
 
-        private static IList<int> RollDice(ref string message, int sides, long rolls = 1, long modifier = 0, long rig = 0)
+        private IList<int> RollDice(ref string message, int sides, long rolls = 1, long modifier = 0, long rig = 0)
         {
             var diceRolls = new List<int>();
 
@@ -106,20 +111,12 @@ namespace JukeboxDiscordClient.Modules
 
             for (int i = 0; i < rolls; i++)
             {
-                var diceRoll = RandomNumber(starting, sides + 1);
+                var diceRoll = _randomService.RandomNumber(starting, sides + 1);
                 message += $"\nRoll {i + 1}: {diceRoll + modifier}";
                 diceRolls.Add(diceRoll);
             }
 
             return diceRolls;
-        }
-
-        private static int RandomNumber(int min, int max)
-        {
-            lock (syncLock)
-            {
-                return random.Next(min, max);
-            }
         }
     }
 

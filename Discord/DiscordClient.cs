@@ -11,7 +11,7 @@ using NetCord.Logging;
 using NetCord.Rest;
 using NetCord.Services;
 using NetCord.Services.ApplicationCommands;
-
+using NetCord.Services.Commands;
 using System.Diagnostics;
 
 namespace JukeboxDiscordClient
@@ -52,7 +52,8 @@ namespace JukeboxDiscordClient
 
             //Register Commands
             var provider = SetupServiceProvider();
-            await InstallCommandsAsync(provider);
+            await InstallSlashCommandsAsync(provider);
+            await RegisterChatCommands(provider);
             await _client.StartAsync();
             
 
@@ -192,7 +193,7 @@ namespace JukeboxDiscordClient
             return serviceProvider;
         }
 
-        private async Task InstallCommandsAsync(ServiceProvider serviceProvider)
+        private async Task InstallSlashCommandsAsync(ServiceProvider serviceProvider)
         {
             ApplicationCommandService<ApplicationCommandContext> applicationCommandService = new();
             applicationCommandService.AddModules(typeof(DiceModule).Assembly);
@@ -224,29 +225,34 @@ namespace JukeboxDiscordClient
             await applicationCommandService.RegisterCommandsAsync(_client.Rest, _client.Id);
         }
 
-        /*private async Task HandleCommandAsync(SocketMessage messageParam)
+        private async Task RegisterChatCommands(ServiceProvider serviceProvider)
         {
-            // Don't process the command if it was a system message
-            var message = messageParam as SocketUserMessage;
-            if (message == null) return;
+            CommandService<CommandContext> commandService = new();
+            commandService.AddModules(typeof(LinkModule).Assembly);
 
-            // Create a number to track where the prefix ends and the command begins
-            int argPos = 0;
+            _client.MessageCreate += async message =>
+            {
+                // Check if the message is a command (starts with '!' and is not from a bot)
+                if (!message.Content.StartsWith('!') || message.Author.IsBot)
+                    return;
 
-            // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix(PREFIX, ref argPos) ||
-                message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
-                return;
+                // Execute the command
+                var result = await commandService.ExecuteAsync(prefixLength: 1, new CommandContext(message, _client), serviceProvider);
 
-            // Create a WebSocket-based command context based on the message
-            var context = new SocketCommandContext(_client, message);
+                // Check if the execution failed
+                if (result is not IFailResult failResult)
+                    return;
 
-            // Execute the command with the command context we just
-            // created, along with the service provider for precondition checks.
-            await _commands.ExecuteAsync(context, argPos, null);
-        }*/
-
+                // Return the error message to the user if the execution failed
+                try
+                {
+                    await message.ReplyAsync(failResult.Message);
+                }
+                catch
+                {
+                }
+            };
+        }
         #endregion
         
     }

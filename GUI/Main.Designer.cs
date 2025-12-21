@@ -97,14 +97,14 @@
             // voiceChannelList
             // 
             voiceChannelList.BackColor = SystemColors.ControlDarkDark;
-            voiceChannelList.DisplayMember = "\"Name\"";
+            voiceChannelList.DisplayMember = "Name";
             voiceChannelList.ForeColor = SystemColors.ControlLightLight;
             voiceChannelList.FormattingEnabled = true;
             voiceChannelList.Location = new Point(94, 61);
             voiceChannelList.Name = "voiceChannelList";
             voiceChannelList.Size = new Size(157, 23);
             voiceChannelList.TabIndex = 4;
-            voiceChannelList.ValueMember = "\"Id\"";
+            voiceChannelList.ValueMember = "Id";
             // 
             // voiceChannelLabel
             // 

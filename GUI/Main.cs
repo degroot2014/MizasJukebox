@@ -1,6 +1,8 @@
 using JukeboxDiscordClient;
+using NetCord;
 using NetCord.Gateway;
-using NetCord.Gateway.Voice;
+using Button = System.Windows.Forms.Button;
+using Color = System.Drawing.Color;
 
 namespace MizasJukebox
 {
@@ -95,17 +97,17 @@ namespace MizasJukebox
 
         private void connectButton_Click(object sender, EventArgs e)
         {
-            /*var selectedServer = (Discord.WebSocket.SocketGuild)serverList.SelectedItem;
+            var selectedServer = (Guild)serverList.SelectedItem;
             if (selectedServer != null)
             {
                 serverErrorProvider.SetError(serverList, string.Empty);
 
-                var selectedVoiceChannel = (Discord.WebSocket.SocketVoiceChannel)voiceChannelList.SelectedItem;
+                var selectedVoiceChannel = (VoiceGuildChannel)voiceChannelList.SelectedItem;
                 if (selectedVoiceChannel != null)
                 {
                     voiceChannelErrorProvider.SetError(voiceChannelList, string.Empty);
 
-                    _discordClient.ConnectToChannel(selectedServer.Id, selectedVoiceChannel.Id);
+                    _discordClient.ConnectToChannel(selectedServer, selectedVoiceChannel);
 
                     connectButton.Hide();
                     disconnectButton.Show();
@@ -125,13 +127,12 @@ namespace MizasJukebox
             else
             {
                 serverErrorProvider.SetError(serverList, "Must Select a Server.");
-            }*/
+            }
 
         }
 
         private void disconnectButton_Click(object sender, EventArgs e)
         {
-            /*
             _discordClient.DisconnectFromChannel();
 
             disconnectButton.Hide();
@@ -143,13 +144,15 @@ namespace MizasJukebox
             DisableButton(pauseButton);
             DisableButton(stopButton);
             DisableButton(loopButton);
-            */
         }
 
         private void serverList_SelectedIndexChanged(object sender, EventArgs e)
         {
+            voiceChannelList.Text = String.Empty;
+
+            //todo handle null
             var guild = (Guild)serverList.SelectedItem;
-            var channels = guild.Channels.Values;
+            var channels = guild.Channels.Values.OfType<VoiceGuildChannel>().ToList(); ;
 
             voiceChannelList.Items.Clear();
             foreach (var channel in channels)
@@ -172,7 +175,6 @@ namespace MizasJukebox
 
         private async void playButton_Click(object sender, EventArgs e)
         {
-            /*
             var song = musicTreeView.SelectedNode;
             if (song != null)
             {
@@ -202,30 +204,25 @@ namespace MizasJukebox
             {
                 musicErrorProvider.SetError(musicTreeView, "Must select a Song to Play.");
             }
-            */
         }
 
         private void pauseButton_Click(object sender, EventArgs e)
         {
-            /*
             if (_discordClient.PauseSong())
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
             }
-            */
         }
 
         private void stopButton_Click(object sender, EventArgs e)
         {
-            /*
             if (_isPaused)
             {
                 pauseButton.Text = _isPaused ? "Pause" : "Resume";
                 _isPaused = !_isPaused;
             }
             _discordClient.StopSong();
-            */
         }
 
         private void mapCommandLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -1,10 +1,13 @@
-﻿using System.Diagnostics;
-using NetCord;
-using NetCord.Gateway;
-using NetCord.Logging;
-//using JukeboxDiscordClient.SlashCommands;
+﻿//using JukeboxDiscordClient.SlashCommands;
 //using JukeboxDiscordClient.Modules;
 using JukeboxDiscordClient.Domain;
+using NetCord;
+using NetCord.Gateway;
+using NetCord.Gateway.Voice;
+using NetCord.Logging;
+using System;
+using System.Diagnostics;
+using System.IO;
 
 namespace JukeboxDiscordClient
 {
@@ -15,14 +18,18 @@ namespace JukeboxDiscordClient
         private const char PREFIX = '!';
 
         private GatewayClient _client;
-        //private SocketGuild _guild;
-        //private SocketVoiceChannel _voiceChannel;
-        //private IAudioClient _audioClient;
+        private Guild _guild;
+        private VoiceGuildChannel _voiceChannel;
+        private VoiceClient _audioClient;
         private Process _ffmpeg;
         private Stream _output;
+        private OpusEncodeStream _stream;
         //private CommandService _commands;
         //private SlashCommandMaster _slashCommands;
         private DiscordSettings _settings;
+
+        private Stopwatch _stopwatch { get; } = new Stopwatch();
+        private string _songPath = String.Empty;
 
         private static bool _paused = false;
         private static bool _playing = false;
@@ -37,7 +44,7 @@ namespace JukeboxDiscordClient
             _client = new(new BotToken(token), new GatewayClientConfiguration
             {
                 Logger = new ConsoleLogger(),
-                Intents = GatewayIntents.All,
+                Intents = GatewayIntents.AllNonPrivileged,
             });
 
             //Register Commands
@@ -50,7 +57,6 @@ namespace JukeboxDiscordClient
 
             //_slashCommands = new SlashCommandMaster(_client);
             //await InstallCommandsAsync();
-            //await Task.Delay(-1);
         }
 
         public IReadOnlyCollection<Guild> GetServers()
@@ -58,27 +64,23 @@ namespace JukeboxDiscordClient
             //Todo : Better handling when no servers are available
             return _client.Cache.Guilds.Values.ToList();
         }
-
-        /*public IReadOnlyCollection<SocketVoiceChannel> GetChannelsForServer(ulong serverId)
-        {
-            var guild = _client.GetGuild(serverId);
-            return guild.VoiceChannels;
-        }*/
-
-        /*
+        
         #region Voice
-        public async void ConnectToChannel(ulong serverId, ulong channelId)
+        public async void ConnectToChannel(Guild selectedGuild, VoiceGuildChannel selectedChannel)
         {
-            _guild = _client.GetGuild(serverId);
-            _voiceChannel = _guild.GetVoiceChannel(channelId);
-            _audioClient = await _voiceChannel.ConnectAsync();
+            _guild = selectedGuild;
+            _voiceChannel = selectedChannel;
+            _audioClient = await _client.JoinVoiceChannelAsync(_guild.Id, _voiceChannel.Id);
+            await _audioClient.StartAsync();
         }
 
         public async void DisconnectFromChannel()
         {
-            await _voiceChannel.DisconnectAsync();
+            await _client.UpdateVoiceStateAsync(new VoiceStateProperties(_guild.Id, null));
+            _audioClient.Dispose();
         }
 
+        
         public bool IsPlaying() 
         { 
             return _playing; 
@@ -86,12 +88,22 @@ namespace JukeboxDiscordClient
 
         public bool PauseSong()
         {
-            if (_playing)
+            if (_stopwatch.ElapsedMilliseconds <= 0)
             {
-                _paused = !_paused;
-                return true;
+                return false;
             }
-            return false;
+
+            if (!_paused)
+            {
+                _stopwatch.Stop();
+                _ffmpeg.Kill();
+            }
+            else
+            {
+                PlaySong(_songPath, _stopwatch.ElapsedMilliseconds);
+            }
+            _paused = !_paused;
+            return true;
         }
 
         public void SetLooping(bool loop)
@@ -99,107 +111,72 @@ namespace JukeboxDiscordClient
             _looping = loop;
         }
 
-        private void TogglePlaying()
-        {
-            _playing = !_playing;
-        }
-
-        public void StopSong()
+        public async void StopSong()
         {
             if (_playing)
             {
                 _ffmpeg.Kill();
                 _endLoop = true;
+                _paused = false;
+                _playing = false;
+                _stopwatch.Reset();
             }
         }
 
-        public async Task PlaySong(string path)
+        public async Task PlaySong(string path, long progressTime = 0)
         {
-            if (_playing)
+            if(_songPath != path)
             {
-                return;
+                StopSong();
+                Task.WaitAll(Task.Delay(500));
+                _songPath = path;
             }
-            else
-            {
-                TogglePlaying();
-            }
+
+            _playing = true;
+            await _audioClient.EnterSpeakingStateAsync(new SpeakingProperties(SpeakingFlags.Microphone));
 
             do
             {
-                _ffmpeg = CreateStream(path);
-                _output = _ffmpeg.StandardOutput.BaseStream;
-                await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);
-            
-                while (true)
-                {
-                    //Music finished or broken
-                    if (_ffmpeg.HasExited || discord == null)
-                    {
-                        CloseFileStreams();
-                        break;
-                    }
+                var outStream = _audioClient.CreateOutputStream();
+                _stream = new OpusEncodeStream(outStream, PcmFormat.Short, VoiceChannels.Stereo, OpusApplication.Audio);
+                _ffmpeg = CreateStream(path, progressTime);
 
-                    if (_paused)
-                        continue;
+                _stopwatch.Start();
+                await _ffmpeg.StandardOutput.BaseStream.CopyToAsync(_stream);
 
-                    var buffer = new byte[BLOCK_SIZE];
-                    var byteCount = await _output.ReadAsync(buffer, 0, BLOCK_SIZE);
-
-                    //File cannot be read or ending
-                    if (byteCount <= 0)
-                        break;
-
-                    //send music bytes to discord
-                    try
-                    {
-                        await discord.WriteAsync(buffer, 0, byteCount);
-                    }
-                    catch (Exception e)
-                    {
-                        await discord?.FlushAsync();
-                        throw;
-                    }
-                }
-
-                //song is done, anything left over if stopped should flush buffer
-                await discord?.FlushAsync();
+                //song is stopped, anything left over if stopped should flush buffer
+                await outStream?.FlushAsync();
                 if(_endLoop)
                 {
                     _endLoop = false;
                     break;
-                }
-            } while(_looping);
-            _playing = false;
-            _paused = false;
+                }               
+            } while(_looping && !_paused);
+            await _audioClient.EnterSpeakingStateAsync(null);
+
+            if (!_paused)
+            {// Song finished normally or stopped
+                _stopwatch.Reset();
+                _playing = false;
+            }
         }
 
-        private Task Log(LogMessage message)
+        private Process CreateStream(string path, long resumeTimeMs)
         {
-            Console.WriteLine(message.ToString());
-            return Task.CompletedTask;
-        }
-
-        private Process CreateStream(string path)
-        {
-            return Process.Start(new ProcessStartInfo
+            var resumeTime = resumeTimeMs / 1000;
+            var newProcess = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                Arguments = $"-hide_banner -loglevel panic -ss {resumeTime} -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true,
-            });
-        }
-
-        private void CloseFileStreams()
-        {
-            if (_ffmpeg != null)
-                _ffmpeg.Close();
-            if (_output != null)
-                _output.Close();
+            };
+            return Process.Start(newProcess);
         }
         #endregion
-        */
+
         /*
         #region Commands
         private async Task InstallCommandsAsync()

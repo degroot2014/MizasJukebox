@@ -1,11 +1,18 @@
-﻿using System.Diagnostics;
-using Discord;
-using Discord.WebSocket;
-using Discord.Audio;
-using Discord.Commands;
-using JukeboxDiscordClient.SlashCommands;
-using JukeboxDiscordClient.Modules;
+﻿using JukeboxDiscordClient.Api;
+using JukeboxDiscordClient.Api.interfaces;
 using JukeboxDiscordClient.Domain;
+using JukeboxDiscordClient.Domain.interfaces;
+using JukeboxDiscordClient.Modules;
+using Microsoft.Extensions.DependencyInjection;
+using NetCord;
+using NetCord.Gateway;
+using NetCord.Gateway.Voice;
+using NetCord.Logging;
+using NetCord.Rest;
+using NetCord.Services;
+using NetCord.Services.ApplicationCommands;
+using NetCord.Services.Commands;
+using System.Diagnostics;
 
 namespace JukeboxDiscordClient
 {
@@ -15,15 +22,16 @@ namespace JukeboxDiscordClient
         private const int BLOCK_SIZE = 1920;
         private const char PREFIX = '!';
 
-        private DiscordSocketClient _client;
-        private SocketGuild _guild;
-        private SocketVoiceChannel _voiceChannel;
-        private IAudioClient _audioClient;
+        private GatewayClient _client;
+        private Guild _guild;
+        private VoiceGuildChannel _voiceChannel;
+        private VoiceClient _audioClient;
         private Process _ffmpeg;
-        private Stream _output;
-        private CommandService _commands;
-        private SlashCommandMaster _slashCommands;
+        private OpusEncodeStream _stream;
         private DiscordSettings _settings;
+
+        private Stopwatch _stopwatch { get; } = new Stopwatch();
+        private string _songPath = String.Empty;
 
         private static bool _paused = false;
         private static bool _playing = false;
@@ -34,45 +42,47 @@ namespace JukeboxDiscordClient
 
         public async Task StartAsync()
         {
-            var socketConfig = new DiscordSocketConfig() { GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent };
-            _client = new DiscordSocketClient(socketConfig);
-
-            _client.Log += Log;
             var token = File.ReadAllText(TOKEN);
+            _client = new(new BotToken(token), 
+                new GatewayClientConfiguration
+                {
+                    Logger = new ConsoleLogger(),
+                    Intents = GatewayIntents.AllNonPrivileged | GatewayIntents.MessageContent,
+                });
 
-            await _client.LoginAsync(TokenType.Bot, token);
+            //Register Commands
+            var provider = SetupServiceProvider();
+            await InstallSlashCommandsAsync(provider);
+            await RegisterChatCommands(provider);
             await _client.StartAsync();
-            while (_client.ConnectionState != ConnectionState.Connected) ;
-            while (_client.Guilds.First() == null || _client.Guilds.First().Name == null) ;
+            
 
-            _slashCommands = new SlashCommandMaster(_client);
-            await InstallCommandsAsync();
+            while (_client.Status == WebSocketStatus.Connecting) ;
+            while (_client.Cache.Guilds.Count == 0 || _client.Cache.Guilds.First().Value == null || _client.Cache.Guilds.First().Value.Name == null) ;
         }
 
-        public IReadOnlyCollection<SocketGuild> GetServers()
+        public IReadOnlyCollection<Guild> GetServers()
         {
-            return _client.Guilds;
+            //Todo : Better handling when no servers are available
+            return _client.Cache.Guilds.Values.ToList();
         }
-
-        public IReadOnlyCollection<SocketVoiceChannel> GetChannelsForServer(ulong serverId)
-        {
-            var guild = _client.GetGuild(serverId);
-            return guild.VoiceChannels;
-        }
-
+        
         #region Voice
-        public async void ConnectToChannel(ulong serverId, ulong channelId)
+        public async void ConnectToChannel(Guild selectedGuild, VoiceGuildChannel selectedChannel)
         {
-            _guild = _client.GetGuild(serverId);
-            _voiceChannel = _guild.GetVoiceChannel(channelId);
-            _audioClient = await _voiceChannel.ConnectAsync();
+            _guild = selectedGuild;
+            _voiceChannel = selectedChannel;
+            _audioClient = await _client.JoinVoiceChannelAsync(_guild.Id, _voiceChannel.Id);
+            await _audioClient.StartAsync();
         }
 
         public async void DisconnectFromChannel()
         {
-            await _voiceChannel.DisconnectAsync();
+            await _client.UpdateVoiceStateAsync(new VoiceStateProperties(_guild.Id, null));
+            _audioClient.Dispose();
         }
 
+        
         public bool IsPlaying() 
         { 
             return _playing; 
@@ -80,12 +90,22 @@ namespace JukeboxDiscordClient
 
         public bool PauseSong()
         {
-            if (_playing)
+            if (_stopwatch.ElapsedMilliseconds <= 0)
             {
-                _paused = !_paused;
-                return true;
+                return false;
             }
-            return false;
+
+            if (!_paused)
+            {
+                _stopwatch.Stop();
+                _ffmpeg.Kill();
+            }
+            else
+            {
+                PlaySong(_songPath, _stopwatch.ElapsedMilliseconds);
+            }
+            _paused = !_paused;
+            return true;
         }
 
         public void SetLooping(bool loop)
@@ -93,149 +113,148 @@ namespace JukeboxDiscordClient
             _looping = loop;
         }
 
-        private void TogglePlaying()
-        {
-            _playing = !_playing;
-        }
-
-        public void StopSong()
+        public async void StopSong()
         {
             if (_playing)
             {
                 _ffmpeg.Kill();
                 _endLoop = true;
+                _paused = false;
+                _playing = false;
+                _stopwatch.Reset();
             }
         }
 
-        public async Task PlaySong(string path)
+        public async Task PlaySong(string path, long progressTime = 0)
         {
-            if (_playing)
+            if(_songPath != path)
             {
-                return;
+                StopSong();
+                Task.WaitAll(Task.Delay(500));
+                _songPath = path;
             }
-            else
-            {
-                TogglePlaying();
-            }
+
+            _playing = true;
+            await _audioClient.EnterSpeakingStateAsync(new SpeakingProperties(SpeakingFlags.Microphone));
 
             do
             {
-                _ffmpeg = CreateStream(path);
-                _output = _ffmpeg.StandardOutput.BaseStream;
-                await using var discord = _audioClient.CreatePCMStream(AudioApplication.Music);
-            
-                while (true)
-                {
-                    //Music finished or broken
-                    if (_ffmpeg.HasExited || discord == null)
-                    {
-                        CloseFileStreams();
-                        break;
-                    }
+                var outStream = _audioClient.CreateOutputStream();
+                _stream = new OpusEncodeStream(outStream, PcmFormat.Short, VoiceChannels.Stereo, OpusApplication.Audio);
+                _ffmpeg = CreateStream(path, progressTime);
 
-                    if (_paused)
-                        continue;
+                _stopwatch.Start();
+                await _ffmpeg.StandardOutput.BaseStream.CopyToAsync(_stream);
 
-                    var buffer = new byte[BLOCK_SIZE];
-                    var byteCount = await _output.ReadAsync(buffer, 0, BLOCK_SIZE);
-
-                    //File cannot be read or ending
-                    if (byteCount <= 0)
-                        break;
-
-                    //send music bytes to discord
-                    try
-                    {
-                        await discord.WriteAsync(buffer, 0, byteCount);
-                    }
-                    catch (Exception e)
-                    {
-                        await discord?.FlushAsync();
-                        throw;
-                    }
-                }
-
-                //song is done, anything left over if stopped should flush buffer
-                await discord?.FlushAsync();
+                //song is stopped, anything left over if stopped should flush buffer
+                await outStream?.FlushAsync();
                 if(_endLoop)
                 {
                     _endLoop = false;
                     break;
-                }
-            } while(_looping);
-            _playing = false;
-            _paused = false;
+                }               
+            } while(_looping && !_paused);
+            await _audioClient.EnterSpeakingStateAsync(null);
+
+            if (!_paused)
+            {// Song finished normally or stopped
+                _stopwatch.Reset();
+                _playing = false;
+            }
         }
 
-        private Task Log(LogMessage message)
+        private Process CreateStream(string path, long resumeTimeMs)
         {
-            Console.WriteLine(message.ToString());
-            return Task.CompletedTask;
-        }
-
-        private Process CreateStream(string path)
-        {
-            return Process.Start(new ProcessStartInfo
+            var resumeTime = resumeTimeMs / 1000;
+            var newProcess = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                Arguments = $"-hide_banner -loglevel panic -ss {resumeTime} -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true,
-            });
-        }
-
-        private void CloseFileStreams()
-        {
-            if (_ffmpeg != null)
-                _ffmpeg.Close();
-            if (_output != null)
-                _output.Close();
-        }
-        #endregion
-        #region Commands
-        private async Task InstallCommandsAsync()
-        {
-            var commandConfig = new CommandServiceConfig()
-            {
-                CaseSensitiveCommands = false
             };
-            _commands = new CommandService(commandConfig);
-
-            _client.MessageReceived += HandleCommandAsync;
-            _client.SlashCommandExecuted += _slashCommands.SlashCommandAsync;
-
-            //Modules
-            await _commands.AddModuleAsync<LinkModule>(null);
-
-            //Slash Commands
-            await _slashCommands.CreateSlashCommands();
+            return Process.Start(newProcess);
         }
-
-        private async Task HandleCommandAsync(SocketMessage messageParam)
-        {
-            // Don't process the command if it was a system message
-            var message = messageParam as SocketUserMessage;
-            if (message == null) return;
-
-            // Create a number to track where the prefix ends and the command begins
-            int argPos = 0;
-
-            // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix(PREFIX, ref argPos) ||
-                message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
-                return;
-
-            // Create a WebSocket-based command context based on the message
-            var context = new SocketCommandContext(_client, message);
-
-            // Execute the command with the command context we just
-            // created, along with the service provider for precondition checks.
-            await _commands.ExecuteAsync(context, argPos, null);
-        }
-
         #endregion
+
+        
+        #region Setup
+        private ServiceProvider SetupServiceProvider()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<Idnd5eapi, dnd5eapi>();
+            services.AddSingleton<IRandomService, RandomService>();
+            services.AddTransient<DndReferenceModule>();
+            services.AddTransient<DiceModule>();
+
+            var serviceProvider = services.BuildServiceProvider();
+            return serviceProvider;
+        }
+
+        private async Task InstallSlashCommandsAsync(ServiceProvider serviceProvider)
+        {
+            ApplicationCommandService<ApplicationCommandContext> applicationCommandService = new();
+            applicationCommandService.AddModules(typeof(DiceModule).Assembly);
+
+            // Add the handler to handle interactions
+            _client.InteractionCreate += async interaction =>
+            {
+                // Check if the interaction is an application command interaction
+                if (interaction is not ApplicationCommandInteraction applicationCommandInteraction)
+                    return;
+
+                // Execute the command
+                var result = await applicationCommandService.ExecuteAsync(new ApplicationCommandContext(applicationCommandInteraction, _client), serviceProvider);
+
+                // Check if the execution failed
+                if (result is not IFailResult failResult)
+                    return;
+
+                // Return the error message to the user if the execution failed
+                try
+                {
+                    await interaction.SendResponseAsync(InteractionCallback.Message(failResult.Message));
+                }
+                catch
+                {
+                }
+            };
+
+            await applicationCommandService.RegisterCommandsAsync(_client.Rest, _client.Id);
+        }
+
+        private async Task RegisterChatCommands(ServiceProvider serviceProvider)
+        {
+            CommandService<CommandContext> commandService = new();
+            commandService.AddModules(typeof(LinkModule).Assembly);
+
+            _client.MessageCreate += async message =>
+            {
+                // Check if the message is a command (starts with '!' and is not from a bot)
+                if (!message.Content.StartsWith('!') || message.Author.IsBot)
+                    return;
+
+                // Execute the command
+                var result = await commandService.ExecuteAsync(prefixLength: 1, new CommandContext(message, _client), serviceProvider);
+
+                // Check if the execution failed
+                if (result is not IFailResult failResult)
+                    return;
+
+                // Return the error message to the user if the execution failed
+                try
+                {
+                    await message.ReplyAsync(failResult.Message);
+                }
+                catch
+                {
+                }
+            };
+        }
+        #endregion
+        
     }
 }
 

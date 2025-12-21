@@ -18,16 +18,7 @@ namespace JukeboxDiscordClient.SlashCommands
         {
             switch (command.Data.Name)
             {
-                case "roll":
-                case "dm-roll":
-                    await DiceCommands.Roll(command);
-                    break;
-                case "roll-percentile":
-                    await DiceCommands.RollPercentile(command);
-                    break;
-                case "roll-health":
-                    await DiceCommands.RollHealth(command);
-                    break;
+             
                 case "condition":
                     await _referenceCommands.GetCondition(command);
                     break;
@@ -54,76 +45,8 @@ namespace JukeboxDiscordClient.SlashCommands
             //_referenceCommands.Test();
         }
 
-        private async Task CreateDmRoll()
-        {
-            var global = new SlashCommandBuilder()
-                .WithName("dm-roll")
-                .WithDescription("Roll dice")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("dice")
-                    .WithDescription("Dice wanting to be rolled")
-                    .WithRequired(true)
-                    .AddChoice("d4", 4)
-                    .AddChoice("d6", 6)
-                    .AddChoice("d8", 8)
-                    .AddChoice("d10", 10)
-                    .AddChoice("d12", 12)
-                    .AddChoice("d20", 20)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .AddOption("number", ApplicationCommandOptionType.Integer, "Number of dice to roll")
-                .AddOption("modifier", ApplicationCommandOptionType.Integer, "Modifier to add to rolls")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("rig")
-                    .WithDescription("Weighted Rolls")
-                    .WithRequired(false)
-                    .AddChoice("High", 1)
-                    .AddChoice("Low", 2)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("hide")
-                    .WithDescription("Hides results")
-                    .WithRequired(false)
-                    .AddChoice("Yes", 1)
-                    .WithType(ApplicationCommandOptionType.Integer));
-            await _client.CreateGlobalApplicationCommandAsync(global.Build());
-        }
+       
 
-        private async Task CreateRollHealth()
-        {
-            var global = new SlashCommandBuilder()
-                .WithName("roll-health")
-                .WithDescription("Rolls dice for health potions")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("type")
-                    .WithDescription("Type of health potion")
-                    .WithRequired(true)
-                    .AddChoice("Regular", 2)
-                    .AddChoice("Greater", 4)
-                    .AddChoice("Superior", 8)
-                    .AddChoice("Supreme", 10)
-                    .WithType(ApplicationCommandOptionType.Integer));
-            await _client.CreateGlobalApplicationCommandAsync(global.Build());
-        }
-        private async Task CreateConditions()
-        {
-            //api call
-            var conditions = _referenceCommands.GetConditions();
-            var options = new SlashCommandOptionBuilder()
-                .WithName("condition")
-                .WithDescription("Condition to get more information about")
-                .WithRequired(true);
-            foreach (var condition in conditions)
-            {
-                options.AddChoice(condition.name, condition.index);
-            }
-            options.WithType(ApplicationCommandOptionType.String);
-
-            var global = new SlashCommandBuilder()
-                .WithName("condition")
-                .WithDescription("Get Condition information");
-            global.AddOption(options);
-            await _client.CreateGlobalApplicationCommandAsync(global.Build());
-        }
         private async Task CreateSpellList()
         {
             var global = new SlashCommandBuilder()

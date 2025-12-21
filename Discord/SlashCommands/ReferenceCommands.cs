@@ -17,18 +17,7 @@ namespace JukeboxDiscordClient.SlashCommands
             return _api.GetConditions();
         }
 
-        public async Task GetCondition(SocketSlashCommand command)
-        {
-            var name = (string)command.Data.Options.First(o => o.Name == "condition").Value;
-            var condition = _api.GetCondition(name);
 
-            var message = $"{condition.name}";
-            foreach (var line in condition.desc)
-            {
-                message += $"\n{line}";
-            }
-            await command.RespondAsync(message);
-        }
 
         public async Task GetSpellList(SocketSlashCommand command)
         {

@@ -1,5 +1,6 @@
 ﻿using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
+using static JukeboxDiscordClient.Domain.CommonEnum;
 using static JukeboxDiscordClient.Modules.DiceModuleEnums;
 
 namespace JukeboxDiscordClient.Modules
@@ -26,24 +27,23 @@ namespace JukeboxDiscordClient.Modules
 
         }
 
-        //todo privs
         [SlashCommand("roll-dm", "Roll dice")]
         public static InteractionMessageProperties RiggedRoll(
             [SlashCommandParameter(Name = "dice", Description = "Type of die")] Die dieType,
             [SlashCommandParameter(Name = "rolls", Description = "Number of dice to roll")] long rolls = 1,
             [SlashCommandParameter(Name = "modifier", Description = "Modifier to add to rolls")] long modifier = 0,
             [SlashCommandParameter(Name = "rig", Description = "Weighted Rolls")] Rig rig = 0,
-            [SlashCommandParameter(Name = "hide", Description = "Hides results")] YesNo hide = 0)
+            [SlashCommandParameter(Name = "hide", Description = "Hides results")] YesNo hide = YesNo.Yes)
         {
             var dice = (int)dieType;
             var rigValue = (long)rig;
-            var hideValue = (long)hide;
 
             var message = $"Rolling d{dice} {rolls} {(rolls == 1 ? "time" : "times")} {(modifier > 0 ? $"with modifier of {modifier}" : String.Empty)}";
 
             RollDice(ref message, dice, rolls, modifier, rigValue);
+
             var props = new InteractionMessageProperties().WithContent(message);
-            if(hideValue == 0)
+            if(hide == YesNo.Yes)
             {
                 props.WithFlags(NetCord.MessageFlags.Ephemeral);
             }
@@ -148,12 +148,6 @@ namespace JukeboxDiscordClient.Modules
             None = 0,
             High = 1,
             Low = 2
-        }
-
-        public enum YesNo
-        {
-            No = 1,
-            Yes = 0
         }
     }
 

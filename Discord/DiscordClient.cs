@@ -23,7 +23,6 @@ namespace JukeboxDiscordClient
         private VoiceGuildChannel _voiceChannel;
         private VoiceClient _audioClient;
         private Process _ffmpeg;
-        private Stream _output;
         private OpusEncodeStream _stream;
         private DiscordSettings _settings;
 

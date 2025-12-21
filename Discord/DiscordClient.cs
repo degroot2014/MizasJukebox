@@ -1,13 +1,14 @@
-﻿//using JukeboxDiscordClient.SlashCommands;
-//using JukeboxDiscordClient.Modules;
-using JukeboxDiscordClient.Domain;
+﻿using JukeboxDiscordClient.Domain;
+using JukeboxDiscordClient.Modules;
 using NetCord;
 using NetCord.Gateway;
 using NetCord.Gateway.Voice;
 using NetCord.Logging;
-using System;
+using NetCord.Rest;
+using NetCord.Services;
+using NetCord.Services.ApplicationCommands;
+
 using System.Diagnostics;
-using System.IO;
 
 namespace JukeboxDiscordClient
 {
@@ -24,8 +25,6 @@ namespace JukeboxDiscordClient
         private Process _ffmpeg;
         private Stream _output;
         private OpusEncodeStream _stream;
-        //private CommandService _commands;
-        //private SlashCommandMaster _slashCommands;
         private DiscordSettings _settings;
 
         private Stopwatch _stopwatch { get; } = new Stopwatch();
@@ -44,19 +43,16 @@ namespace JukeboxDiscordClient
             _client = new(new BotToken(token), new GatewayClientConfiguration
             {
                 Logger = new ConsoleLogger(),
-                Intents = GatewayIntents.AllNonPrivileged,
+                Intents = GatewayIntents.AllNonPrivileged | GatewayIntents.MessageContent,
             });
 
             //Register Commands
-
+            await InstallCommandsAsync();
             await _client.StartAsync();
             
 
             while (_client.Status == WebSocketStatus.Connecting) ;
             while (_client.Cache.Guilds.Count == 0 || _client.Cache.Guilds.First().Value == null || _client.Cache.Guilds.First().Value.Name == null) ;
-
-            //_slashCommands = new SlashCommandMaster(_client);
-            //await InstallCommandsAsync();
         }
 
         public IReadOnlyCollection<Guild> GetServers()
@@ -177,27 +173,41 @@ namespace JukeboxDiscordClient
         }
         #endregion
 
-        /*
+        
         #region Commands
         private async Task InstallCommandsAsync()
         {
-            var commandConfig = new CommandServiceConfig()
+            ApplicationCommandService<ApplicationCommandContext> applicationCommandService = new();
+            applicationCommandService.AddModules(typeof(DiceModule).Assembly);
+
+            // Add the handler to handle interactions
+            _client.InteractionCreate += async interaction =>
             {
-                CaseSensitiveCommands = false
+                // Check if the interaction is an application command interaction
+                if (interaction is not ApplicationCommandInteraction applicationCommandInteraction)
+                    return;
+
+                // Execute the command
+                var result = await applicationCommandService.ExecuteAsync(new ApplicationCommandContext(applicationCommandInteraction, _client));
+
+                // Check if the execution failed
+                if (result is not IFailResult failResult)
+                    return;
+
+                // Return the error message to the user if the execution failed
+                try
+                {
+                    await interaction.SendResponseAsync(InteractionCallback.Message(failResult.Message));
+                }
+                catch
+                {
+                }
             };
-            _commands = new CommandService(commandConfig);
 
-            _client.MessageReceived += HandleCommandAsync;
-            _client.SlashCommandExecuted += _slashCommands.SlashCommandAsync;
-
-            //Modules
-            await _commands.AddModuleAsync<LinkModule>(null);
-
-            //Slash Commands
-            await _slashCommands.CreateSlashCommands();
+            await applicationCommandService.RegisterCommandsAsync(_client.Rest, _client.Id);
         }
 
-        private async Task HandleCommandAsync(SocketMessage messageParam)
+        /*private async Task HandleCommandAsync(SocketMessage messageParam)
         {
             // Don't process the command if it was a system message
             var message = messageParam as SocketUserMessage;
@@ -218,10 +228,10 @@ namespace JukeboxDiscordClient
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
             await _commands.ExecuteAsync(context, argPos, null);
-        }
+        }*/
 
         #endregion
-        */
+        
     }
 }
 

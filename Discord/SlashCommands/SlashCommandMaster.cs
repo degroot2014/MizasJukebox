@@ -54,26 +54,6 @@ namespace JukeboxDiscordClient.SlashCommands
             //_referenceCommands.Test();
         }
 
-        private async Task CreateRoll()
-        {
-            var global = new SlashCommandBuilder()
-                .WithName("roll")
-                .WithDescription("Roll dice")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("dice")
-                    .WithDescription("Dice wanting to be rolled")
-                    .WithRequired(true)
-                    .AddChoice("d4", 4)
-                    .AddChoice("d6", 6)
-                    .AddChoice("d8", 8)
-                    .AddChoice("d10", 10)
-                    .AddChoice("d12", 12)
-                    .AddChoice("d20", 20)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .AddOption("number", ApplicationCommandOptionType.Integer, "Number of dice to roll")
-                .AddOption("modifier", ApplicationCommandOptionType.Integer, "Modifier to add to rolls");
-            await _client.CreateGlobalApplicationCommandAsync(global.Build());
-        }
         private async Task CreateDmRoll()
         {
             var global = new SlashCommandBuilder()
@@ -107,13 +87,7 @@ namespace JukeboxDiscordClient.SlashCommands
                     .WithType(ApplicationCommandOptionType.Integer));
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
-        private async Task CreatePercentileRoll()
-        {
-            var global = new SlashCommandBuilder()
-                .WithName("roll-percentile")
-                .WithDescription("Rolls 2 d10 dice for percentile");
-            await _client.CreateGlobalApplicationCommandAsync(global.Build());
-        }
+
         private async Task CreateRollHealth()
         {
             var global = new SlashCommandBuilder()
@@ -191,5 +165,4 @@ namespace JukeboxDiscordClient.SlashCommands
             await _client.CreateGlobalApplicationCommandAsync(global.Build());
         }
     }
-}
-*/
+}*/

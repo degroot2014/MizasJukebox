@@ -72,42 +72,7 @@ namespace JukeboxDiscordClient.SlashCommands
             await command.RespondAsync(message);
         }
 
-        private static IList<int> RollDice(ref string message, int sides, long rolls = 1, long modifier = 0, long rig = 0)
-        {
-            var diceRolls = new List<int>();
-
-            var starting = 1;
-            if (sides == 10)
-            {
-                starting = 0;
-                sides = 9;
-            }
-            if (rig == 1)
-            {
-                starting = Math.Max(sides - 3, 1);
-            }
-            if (rig == 2)
-            {
-                sides = Math.Min(starting + 3, sides);
-            }
-
-            for (int i = 0; i < rolls; i++)
-            {
-                var diceRoll = RandomNumber(starting, sides + 1);
-                message += $"\nRoll {i + 1}: {diceRoll + modifier}";
-                diceRolls.Add(diceRoll);
-            }
-
-            return diceRolls;
-        }
-
-        private static int RandomNumber(int min, int max)
-        {
-            lock (syncLock)
-            {
-                return random.Next(min, max);
-            }
-        }
+        
     }
 }
 */

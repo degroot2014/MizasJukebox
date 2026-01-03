@@ -1,5 +1,4 @@
-﻿using JukeboxDiscordClient.Api.interfaces;
-using JukeboxDiscordClient.Domain.interfaces;
+﻿using JukeboxDiscordClient.Domain.interfaces;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using static JukeboxDiscordClient.Domain.CommonEnum;

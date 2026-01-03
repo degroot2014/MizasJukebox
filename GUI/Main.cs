@@ -1,4 +1,5 @@
 using JukeboxDiscordClient;
+using MizasJukebox.Domain;
 using NetCord;
 using NetCord.Gateway;
 using Button = System.Windows.Forms.Button;
@@ -16,9 +17,17 @@ namespace MizasJukebox
         public Main()
         {
             InitializeComponent();
+            FormClosing += Main_FormClosing;
             StartDiscord();
             InitializeSettings();
             GetMusicTracks();
+        }
+
+        private async void Main_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            _settings.SaveSettings();
+            _discordClient?.SaveSettings();
+            _discordClient?.DisconnectFromChannel();
         }
 
         private async void StartDiscord()
@@ -252,7 +261,6 @@ namespace MizasJukebox
 
         private void loopButton_Click(object sender, EventArgs e)
         {
-            /*
             _isLooping = !_isLooping;
             _discordClient.SetLooping(_isLooping);
             if (_isLooping)
@@ -263,7 +271,6 @@ namespace MizasJukebox
             {
                 loopButton.Text = "Loop";
             }
-            */
         }
 
         private void DisableButton(Button button)

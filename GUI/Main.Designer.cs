@@ -31,6 +31,8 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             serverPanel = new Panel();
+            textChannelList = new ComboBox();
+            textChannelLabel = new Label();
             serverList = new ComboBox();
             voiceChannelList = new ComboBox();
             voiceChannelLabel = new Label();
@@ -56,19 +58,26 @@
             musicErrorProvider = new ErrorProvider(components);
             discordCommandSettingsLabel = new Label();
             commandPanel = new Panel();
+            repListLabel = new Label();
+            repLabel = new Label();
             mapCommand = new Label();
             mapCommandLabel = new LinkLabel();
             mapOpenFileDialog = new OpenFileDialog();
+            reputationButton = new Button();
+            textChannelErrorProvider = new ErrorProvider(components);
             serverPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)voiceChannelErrorProvider).BeginInit();
             ((System.ComponentModel.ISupportInitialize)serverErrorProvider).BeginInit();
             musicPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)musicErrorProvider).BeginInit();
             commandPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)textChannelErrorProvider).BeginInit();
             SuspendLayout();
             // 
             // serverPanel
             // 
+            serverPanel.Controls.Add(textChannelList);
+            serverPanel.Controls.Add(textChannelLabel);
             serverPanel.Controls.Add(serverList);
             serverPanel.Controls.Add(voiceChannelList);
             serverPanel.Controls.Add(voiceChannelLabel);
@@ -78,8 +87,29 @@
             serverPanel.Controls.Add(disconnectButton);
             serverPanel.Location = new Point(520, 12);
             serverPanel.Name = "serverPanel";
-            serverPanel.Size = new Size(268, 95);
+            serverPanel.Size = new Size(268, 119);
             serverPanel.TabIndex = 0;
+            // 
+            // textChannelList
+            // 
+            textChannelList.BackColor = SystemColors.ControlDarkDark;
+            textChannelList.DisplayMember = "Name";
+            textChannelList.ForeColor = SystemColors.ControlLightLight;
+            textChannelList.FormattingEnabled = true;
+            textChannelList.Location = new Point(94, 90);
+            textChannelList.Name = "textChannelList";
+            textChannelList.Size = new Size(157, 23);
+            textChannelList.TabIndex = 7;
+            textChannelList.ValueMember = "Id";
+            // 
+            // textChannelLabel
+            // 
+            textChannelLabel.AutoSize = true;
+            textChannelLabel.Location = new Point(3, 93);
+            textChannelLabel.Name = "textChannelLabel";
+            textChannelLabel.Size = new Size(78, 15);
+            textChannelLabel.TabIndex = 6;
+            textChannelLabel.Text = "Text Channel:";
             // 
             // serverList
             // 
@@ -312,13 +342,33 @@
             // 
             // commandPanel
             // 
+            commandPanel.Controls.Add(repListLabel);
+            commandPanel.Controls.Add(repLabel);
             commandPanel.Controls.Add(mapCommand);
             commandPanel.Controls.Add(mapCommandLabel);
             commandPanel.Controls.Add(discordCommandSettingsLabel);
-            commandPanel.Location = new Point(520, 113);
+            commandPanel.Location = new Point(520, 135);
             commandPanel.Name = "commandPanel";
             commandPanel.Size = new Size(268, 170);
             commandPanel.TabIndex = 8;
+            // 
+            // repListLabel
+            // 
+            repListLabel.AutoSize = true;
+            repListLabel.Location = new Point(10, 57);
+            repListLabel.Name = "repListLabel";
+            repListLabel.Size = new Size(42, 15);
+            repListLabel.TabIndex = 13;
+            repListLabel.Text = "!replist";
+            // 
+            // repLabel
+            // 
+            repLabel.AutoSize = true;
+            repLabel.Location = new Point(10, 42);
+            repLabel.Name = "repLabel";
+            repLabel.Size = new Size(119, 15);
+            repLabel.TabIndex = 12;
+            repLabel.Text = "!rep {Location Name}";
             // 
             // mapCommand
             // 
@@ -347,16 +397,35 @@
             mapOpenFileDialog.FileName = "mapOpenFileDialog";
             mapOpenFileDialog.Title = "Picture of Map";
             // 
+            // reputationButton
+            // 
+            reputationButton.BackColor = SystemColors.ButtonShadow;
+            reputationButton.ForeColor = SystemColors.ControlText;
+            reputationButton.Location = new Point(528, 486);
+            reputationButton.Name = "reputationButton";
+            reputationButton.Size = new Size(80, 50);
+            reputationButton.TabIndex = 9;
+            reputationButton.Text = "View Reputation";
+            reputationButton.UseVisualStyleBackColor = false;
+            reputationButton.Click += reputationButton_Click;
+            // 
+            // textChannelErrorProvider
+            // 
+            textChannelErrorProvider.ContainerControl = this;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlDarkDark;
             ClientSize = new Size(794, 548);
+            Controls.Add(reputationButton);
             Controls.Add(commandPanel);
             Controls.Add(musicPanel);
             Controls.Add(serverPanel);
             ForeColor = SystemColors.ControlLightLight;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "Main";
             Text = "Miza's Jukebox";
             serverPanel.ResumeLayout(false);
@@ -368,6 +437,7 @@
             ((System.ComponentModel.ISupportInitialize)musicErrorProvider).EndInit();
             commandPanel.ResumeLayout(false);
             commandPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)textChannelErrorProvider).EndInit();
             ResumeLayout(false);
 
         }
@@ -403,5 +473,11 @@
         private OpenFileDialog mapOpenFileDialog;
         private TreeView musicTreeView;
         private Button loopButton;
+        private Button reputationButton;
+        private ComboBox textChannelList;
+        private Label textChannelLabel;
+        private Label repListLabel;
+        private Label repLabel;
+        private ErrorProvider textChannelErrorProvider;
     }
 }

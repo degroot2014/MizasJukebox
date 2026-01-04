@@ -9,7 +9,7 @@ namespace JukeboxDiscordClient.Modules
         private readonly DiscordSettings _settings = new();
 
         [Command("map")]
-        public async Task SquareAsync()
+        public async Task Map()
         {
             _settings.LoadSettings();
             var message = new MessageProperties().AddAttachments(new AttachmentProperties(Path.GetFileName(_settings.MapCommand),File.OpenRead(_settings.MapCommand)));

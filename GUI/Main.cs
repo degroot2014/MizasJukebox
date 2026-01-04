@@ -1,4 +1,6 @@
 using JukeboxDiscordClient;
+using JukeboxDiscordClient.Domain.Exceptions;
+using MizasJukebox.Domain;
 using NetCord;
 using NetCord.Gateway;
 using Button = System.Windows.Forms.Button;
@@ -16,9 +18,37 @@ namespace MizasJukebox
         public Main()
         {
             InitializeComponent();
+            FormClosing += Main_FormClosing;
             StartDiscord();
             InitializeSettings();
             GetMusicTracks();
+        }
+
+        public TextGuildChannel GetTextChannel()
+        {
+            var selectedTextChannel = (TextGuildChannel)textChannelList.SelectedItem;
+            if(selectedTextChannel != null)
+            {
+                return selectedTextChannel;
+            }
+            throw new NoChannelException();
+        }
+
+        public void SetTextChannelError()
+        {
+            textChannelErrorProvider.SetError(textChannelList, "Must Select a Channel.");
+        }
+
+        public void ClearTextChannelError()
+        {
+            textChannelErrorProvider.SetError(textChannelList, string.Empty);
+        }
+
+        private async void Main_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            _settings.SaveSettings();
+            _discordClient?.SaveSettings();
+            _discordClient?.DisconnectFromChannel();
         }
 
         private async void StartDiscord()
@@ -149,15 +179,23 @@ namespace MizasJukebox
         private void serverList_SelectedIndexChanged(object sender, EventArgs e)
         {
             voiceChannelList.Text = String.Empty;
+            textChannelList.Text = String.Empty;
 
             //todo handle null
             var guild = (Guild)serverList.SelectedItem;
-            var channels = guild.Channels.Values.OfType<VoiceGuildChannel>().ToList(); ;
+            var channels = guild.Channels.Values.OfType<VoiceGuildChannel>().ToList();
+            var textChannels = guild.Channels.Values.OfType<TextGuildChannel>().ToList();
 
             voiceChannelList.Items.Clear();
             foreach (var channel in channels)
             {
                 voiceChannelList.Items.Add(channel);
+            }
+
+            textChannelList.Items.Clear();
+            foreach (var channel in textChannels)
+            {
+                textChannelList.Items.Add(channel);
             }
         }
 
@@ -252,7 +290,6 @@ namespace MizasJukebox
 
         private void loopButton_Click(object sender, EventArgs e)
         {
-            /*
             _isLooping = !_isLooping;
             _discordClient.SetLooping(_isLooping);
             if (_isLooping)
@@ -263,7 +300,6 @@ namespace MizasJukebox
             {
                 loopButton.Text = "Loop";
             }
-            */
         }
 
         private void DisableButton(Button button)
@@ -276,6 +312,24 @@ namespace MizasJukebox
         {
             button.Enabled = true;
             button.BackColor = SystemColors.ControlLightLight;
+        }
+
+        private void reputationButton_Click(object sender, EventArgs e)
+        {
+            var formInstance = System.Windows.Forms.Application.OpenForms.OfType<ReputationForm>().FirstOrDefault();
+
+            if (formInstance == null)
+            {
+                var reputationForm = new ReputationForm(this, _discordClient);
+
+                reputationForm.Location = new Point(this.Location.X + this.Width, this.Location.Y);
+                reputationForm.Show();
+            }
+            else
+            {
+                formInstance.Location = new Point(this.Location.X + this.Width, this.Location.Y);
+                formInstance.Focus();
+            }
         }
     }
 }

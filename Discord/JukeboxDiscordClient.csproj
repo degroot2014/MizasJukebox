@@ -8,15 +8,15 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="libsodium" Version="1.0.20.1" />
+    <PackageReference Include="libsodium" Version="1.0.20.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
-    <PackageReference Include="NetCord" Version="1.0.0-alpha.451" />
-    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.451" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NetCord" Version="1.0.0-alpha.452" />
+    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.452" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Opus" Version="1.0.0" />
-    <PackageReference Include="RestSharp" Version="112.1.0" />
-    <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="112.1.0" />
+    <PackageReference Include="RestSharp" Version="113.0.0" />
+    <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" Version="113.0.0" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

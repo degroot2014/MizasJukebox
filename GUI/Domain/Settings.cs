@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MizasJukebox
+namespace MizasJukebox.Domain
 {
     public class Settings
     {

@@ -12,6 +12,7 @@ using NetCord.Rest;
 using NetCord.Services;
 using NetCord.Services.ApplicationCommands;
 using NetCord.Services.Commands;
+using System;
 using System.Diagnostics;
 
 namespace JukeboxDiscordClient
@@ -29,6 +30,7 @@ namespace JukeboxDiscordClient
         private Process _ffmpeg;
         private OpusEncodeStream _stream;
         private DiscordSettings _settings;
+        private Reputation _reputation = new();
 
         private Stopwatch _stopwatch { get; } = new Stopwatch();
         private string _songPath = String.Empty;
@@ -50,6 +52,8 @@ namespace JukeboxDiscordClient
                     Intents = GatewayIntents.AllNonPrivileged | GatewayIntents.MessageContent,
                 });
 
+            _reputation.LoadReputation();
+
             //Register Commands
             var provider = SetupServiceProvider();
             await InstallSlashCommandsAsync(provider);
@@ -61,12 +65,56 @@ namespace JukeboxDiscordClient
             while (_client.Cache.Guilds.Count == 0 || _client.Cache.Guilds.First().Value == null || _client.Cache.Guilds.First().Value.Name == null) ;
         }
 
+        public void SaveSettings()
+        {
+            _reputation.SaveReputation();
+        }
+
         public IReadOnlyCollection<Guild> GetServers()
         {
             //Todo : Better handling when no servers are available
             return _client.Cache.Guilds.Values.ToList();
         }
-        
+
+        #region Reputation Maintenance
+        public Reputation GetReputation()
+        {
+            return _reputation;
+        }
+
+        public async void ReputationUp(KeyValuePair<string, int> reputation, int increase, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nCongratulations, your Reputation has increased by {increase}!!\nReputation for {reputation.Key} is now {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationDown(KeyValuePair<string, int> reputation, int decrease, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nMisfortune has befallen you, your Reputation has decreased by {decrease}!!\nReputation for {reputation.Key} is now {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationWelcome(KeyValuePair<string, int> reputation, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nWelcome to {reputation.Key}!\nYour starting Reputation is {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationList(TextGuildChannel selectedChannel)
+        {
+            var messageText = "Reputation List:\n";
+            foreach (var rep in _reputation.Reputations)
+            {
+                messageText += $"{rep.Key}: {rep.Value}\n";
+            }
+            var message = new MessageProperties().WithContent(messageText);
+            await selectedChannel.SendMessageAsync(message);
+        }
+        #endregion
+
         #region Voice
         public async void ConnectToChannel(Guild selectedGuild, VoiceGuildChannel selectedChannel)
         {
@@ -78,11 +126,16 @@ namespace JukeboxDiscordClient
 
         public async void DisconnectFromChannel()
         {
-            await _client.UpdateVoiceStateAsync(new VoiceStateProperties(_guild.Id, null));
-            _audioClient.Dispose();
+            if (_guild != null && _guild.Id > 0)
+            { 
+                await _client.UpdateVoiceStateAsync(new VoiceStateProperties(_guild.Id, null));
+            }
+            if (_audioClient != null)
+            {
+                _audioClient.Dispose();
+            }
         }
 
-        
         public bool IsPlaying() 
         { 
             return _playing; 
@@ -179,15 +232,16 @@ namespace JukeboxDiscordClient
         }
         #endregion
 
-        
         #region Setup
         private ServiceProvider SetupServiceProvider()
         {
             var services = new ServiceCollection();
             services.AddSingleton<Idnd5eapi, dnd5eapi>();
             services.AddSingleton<IRandomService, RandomService>();
+            services.AddSingleton(_reputation);
             services.AddTransient<DndReferenceModule>();
             services.AddTransient<DiceModule>();
+            services.AddTransient<ReputationModule>();
 
             var serviceProvider = services.BuildServiceProvider();
             return serviceProvider;
@@ -257,10 +311,3 @@ namespace JukeboxDiscordClient
         
     }
 }
-
-/*
-    Code to remove Commands
-        var test = await _client.GetGlobalApplicationCommandsAsync();
-        var command = test.First(t => t.Name == "rigged-roll");
-        await command.DeleteAsync();
-*/

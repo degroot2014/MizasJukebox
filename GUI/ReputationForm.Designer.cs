@@ -45,6 +45,7 @@
             decreaseRepButton = new Button();
             welcomeButton = new Button();
             showListButton = new Button();
+            saveButton = new Button();
             ((System.ComponentModel.ISupportInitialize)reputationView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)reputationUpDown).BeginInit();
             SuspendLayout();
@@ -89,7 +90,7 @@
             reputationView.RowHeadersWidth = 20;
             reputationView.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             reputationView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            reputationView.Size = new Size(322, 391);
+            reputationView.Size = new Size(322, 389);
             reputationView.TabIndex = 0;
             reputationView.SelectionChanged += reputationView_SelectionChanged;
             // 
@@ -213,12 +214,25 @@
             showListButton.UseVisualStyleBackColor = false;
             showListButton.Click += showListButton_Click;
             // 
+            // saveButton
+            // 
+            saveButton.BackColor = SystemColors.ButtonShadow;
+            saveButton.ForeColor = SystemColors.ControlText;
+            saveButton.Location = new Point(410, 363);
+            saveButton.Name = "saveButton";
+            saveButton.Size = new Size(88, 38);
+            saveButton.TabIndex = 14;
+            saveButton.Text = "Save";
+            saveButton.UseVisualStyleBackColor = false;
+            saveButton.Click += saveButton_Click;
+            // 
             // ReputationForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ControlDarkDark;
             ClientSize = new Size(559, 413);
+            Controls.Add(saveButton);
             Controls.Add(showListButton);
             Controls.Add(welcomeButton);
             Controls.Add(decreaseRepButton);
@@ -257,5 +271,6 @@
         private Button decreaseRepButton;
         private Button welcomeButton;
         private Button showListButton;
+        private Button saveButton;
     }
 }

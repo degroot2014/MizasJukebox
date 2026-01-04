@@ -74,8 +74,8 @@ namespace MizasJukebox
 
         private void decreaseRepButton_Click(object sender, EventArgs e)
         {
-            try 
-            { 
+            try
+            {
                 if (reputationView.SelectedRows.Count > 0)
                 {
                     var textChannel = _mainForm.GetTextChannel();
@@ -99,8 +99,8 @@ namespace MizasJukebox
 
         private void welcomeButton_Click(object sender, EventArgs e)
         {
-            try 
-            { 
+            try
+            {
                 if (reputationView.SelectedRows.Count > 0)
                 {
                     var textChannel = _mainForm.GetTextChannel();
@@ -116,7 +116,7 @@ namespace MizasJukebox
             {
                 _mainForm.SetTextChannelError();
             }
-}
+        }
 
         private void showListButton_Click(object sender, EventArgs e)
         {
@@ -129,6 +129,11 @@ namespace MizasJukebox
             {
                 _mainForm.SetTextChannelError();
             }
-}
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            _discordClient.SaveSettings();
+        }
     }
 }

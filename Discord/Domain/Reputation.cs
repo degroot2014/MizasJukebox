@@ -34,21 +34,25 @@ namespace JukeboxDiscordClient.Domain
         /// </summary>
         /// <param name="rep"></param>
         /// <param name="change"></param>
-        public void ReputationChange(string rep, int change)
+        public int ReputationChange(string rep, int change)
         {
-            if (Reputations.ContainsKey(rep))
+            var key = Reputations.Keys.FirstOrDefault(k => string.Equals(k.Normalize(), rep.Normalize(), StringComparison.OrdinalIgnoreCase));
+            if(key != null)
             {
-                Reputations[rep] += change;
+                Reputations[key] += change;
             }
             else
             {
                 Reputations[rep] = change;
+                return change;
             }
+            return Reputations[key];
         }
 
         public void RemoveReputation(string rep)
         {
-            if (Reputations.ContainsKey(rep))
+            var key = Reputations.Keys.FirstOrDefault(k => string.Equals(k.Normalize(), rep.Normalize(), StringComparison.OrdinalIgnoreCase));
+            if (key != null)
             {
                 Reputations.Remove(rep);
             }

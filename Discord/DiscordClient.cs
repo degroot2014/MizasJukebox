@@ -12,6 +12,7 @@ using NetCord.Rest;
 using NetCord.Services;
 using NetCord.Services.ApplicationCommands;
 using NetCord.Services.Commands;
+using System;
 using System.Diagnostics;
 
 namespace JukeboxDiscordClient
@@ -75,11 +76,45 @@ namespace JukeboxDiscordClient
             return _client.Cache.Guilds.Values.ToList();
         }
 
-        public Dictionary<string, int> GetReputation()
+        #region Reputation Maintenance
+        public Reputation GetReputation()
         {
-            return _reputation.Reputations;
+            return _reputation;
         }
-        
+
+        public async void ReputationUp(KeyValuePair<string, int> reputation, int increase, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nCongratulations, your Reputation has increased by {increase}!!\nReputation for {reputation.Key} is now {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationDown(KeyValuePair<string, int> reputation, int decrease, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nMisfortune has befallen you, your Reputation has decreased by {decrease}!!\nReputation for {reputation.Key} is now {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationWelcome(KeyValuePair<string, int> reputation, TextGuildChannel selectedChannel)
+        {
+            var text = $"<---------------------------------------->\nWelcome to {reputation.Key}!\nYour starting Reputation is {reputation.Value}.\n<---------------------------------------->";
+            var message = new MessageProperties().WithContent(text);
+            await selectedChannel.SendMessageAsync(message);
+        }
+
+        public async void ReputationList(TextGuildChannel selectedChannel)
+        {
+            var messageText = "Reputation List:\n";
+            foreach (var rep in _reputation.Reputations)
+            {
+                messageText += $"{rep.Key}: {rep.Value}\n";
+            }
+            var message = new MessageProperties().WithContent(messageText);
+            await selectedChannel.SendMessageAsync(message);
+        }
+        #endregion
+
         #region Voice
         public async void ConnectToChannel(Guild selectedGuild, VoiceGuildChannel selectedChannel)
         {

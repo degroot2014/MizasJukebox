@@ -192,7 +192,7 @@ namespace JukeboxDiscordClient
 
             do
             {
-                var outStream = _audioClient.CreateOutputStream();
+                var outStream = _audioClient.CreateVoiceStream();
                 _stream = new OpusEncodeStream(outStream, PcmFormat.Short, VoiceChannels.Stereo, OpusApplication.Audio);
                 _ffmpeg = CreateStream(path, progressTime);
 

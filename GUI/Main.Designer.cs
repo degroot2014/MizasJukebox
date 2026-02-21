@@ -31,6 +31,7 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             serverPanel = new Panel();
+            refreshServerButton = new Button();
             textChannelList = new ComboBox();
             textChannelLabel = new Label();
             serverList = new ComboBox();
@@ -76,6 +77,7 @@
             // 
             // serverPanel
             // 
+            serverPanel.Controls.Add(refreshServerButton);
             serverPanel.Controls.Add(textChannelList);
             serverPanel.Controls.Add(textChannelLabel);
             serverPanel.Controls.Add(serverList);
@@ -89,6 +91,20 @@
             serverPanel.Name = "serverPanel";
             serverPanel.Size = new Size(268, 119);
             serverPanel.TabIndex = 0;
+            // 
+            // refreshServerButton
+            // 
+            refreshServerButton.Enabled = false;
+            refreshServerButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            refreshServerButton.ForeColor = SystemColors.ControlText;
+            refreshServerButton.Image = (Image)resources.GetObject("refreshServerButton.Image");
+            refreshServerButton.Location = new Point(231, 6);
+            refreshServerButton.Name = "refreshServerButton";
+            refreshServerButton.Size = new Size(20, 22);
+            refreshServerButton.TabIndex = 10;
+            refreshServerButton.TextAlign = ContentAlignment.TopRight;
+            refreshServerButton.UseVisualStyleBackColor = true;
+            refreshServerButton.Click += refreshServerButton_Click;
             // 
             // textChannelList
             // 
@@ -479,5 +495,6 @@
         private Label repListLabel;
         private Label repLabel;
         private ErrorProvider textChannelErrorProvider;
+        private Button refreshServerButton;
     }
 }

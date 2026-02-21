@@ -27,7 +27,7 @@ namespace MizasJukebox
         public TextGuildChannel GetTextChannel()
         {
             var selectedTextChannel = (TextGuildChannel)textChannelList.SelectedItem;
-            if(selectedTextChannel != null)
+            if (selectedTextChannel != null)
             {
                 return selectedTextChannel;
             }
@@ -62,6 +62,7 @@ namespace MizasJukebox
             {
                 serverList.Items.Add(server);
             }
+            refreshServerButton.Enabled = true;
         }
 
         private void InitializeSettings()
@@ -329,6 +330,18 @@ namespace MizasJukebox
             {
                 formInstance.Location = new Point(this.Location.X + this.Width, this.Location.Y);
                 formInstance.Focus();
+            }
+        }
+
+        private void refreshServerButton_Click(object sender, EventArgs e)
+        {
+            var servers = _discordClient.GetServers();
+            foreach (var server in servers)
+            {
+                if (!serverList.Items.OfType<Guild>().Any(g => g.Id == server.Id))
+                {
+                    serverList.Items.Add(server);
+                }
             }
         }
     }
